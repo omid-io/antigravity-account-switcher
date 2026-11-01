@@ -158,12 +158,19 @@ body.vscode-dark #agy-avatar-trigger-btn:active {
   --agy-confirm-cancel-bg: #ffffff;
   --agy-confirm-cancel-border: #cbd5e1;
   --agy-confirm-cancel-text: #475569;
-  --agy-info-circle-bg: #e2e8f0;
-  --agy-info-circle-border: #cbd5e1;
-  --agy-info-circle-text: #475569;
-  --agy-info-tooltip-bg: #0f172a;
-  --agy-info-tooltip-text: #f8fafc;
-  --agy-info-tooltip-border: rgba(255, 255, 255, 0.12);
+  --agy-info-circle-bg: #eff6ff;
+  --agy-info-circle-border: #bfdbfe;
+  --agy-info-circle-text: #2563eb;
+  --agy-info-tooltip-bg: rgba(255, 255, 255, 0.98);
+  --agy-info-tooltip-text: #0f172a;
+  --agy-info-tooltip-sub: #475569;
+  --agy-info-tooltip-border: rgba(226, 232, 240, 0.95);
+  --agy-info-tooltip-shadow: 0 16px 36px -4px rgba(15, 23, 42, 0.14), 0 4px 12px rgba(15, 23, 42, 0.05);
+  --agy-info-pill-bg: #eff6ff;
+  --agy-info-pill-color: #2563eb;
+  --agy-info-pill-border: #bfdbfe;
+  --agy-info-tag-bg: #f1f5f9;
+  --agy-info-tag-color: #64748b;
 }
 
 /* Dark Theme Overrides: Synchronized with Antigravity dark theme */
@@ -203,12 +210,19 @@ body.vscode-dark #agy-account-switcher-popover {
   --agy-confirm-cancel-bg: rgba(255, 255, 255, 0.08);
   --agy-confirm-cancel-border: rgba(255, 255, 255, 0.14);
   --agy-confirm-cancel-text: #e4e4e7;
-  --agy-info-circle-bg: rgba(255, 255, 255, 0.1);
-  --agy-info-circle-border: rgba(255, 255, 255, 0.16);
-  --agy-info-circle-text: #cbd5e1;
-  --agy-info-tooltip-bg: #141419;
+  --agy-info-circle-bg: rgba(59, 130, 246, 0.15);
+  --agy-info-circle-border: rgba(59, 130, 246, 0.35);
+  --agy-info-circle-text: #93c5fd;
+  --agy-info-tooltip-bg: rgba(26, 27, 34, 0.98);
   --agy-info-tooltip-text: #f4f4f5;
-  --agy-info-tooltip-border: rgba(255, 255, 255, 0.18);
+  --agy-info-tooltip-sub: #a1a1aa;
+  --agy-info-tooltip-border: rgba(255, 255, 255, 0.12);
+  --agy-info-tooltip-shadow: 0 20px 45px -4px rgba(0, 0, 0, 0.65), 0 4px 16px rgba(0, 0, 0, 0.4);
+  --agy-info-pill-bg: rgba(37, 99, 235, 0.22);
+  --agy-info-pill-color: #93c5fd;
+  --agy-info-pill-border: rgba(59, 130, 246, 0.35);
+  --agy-info-tag-bg: rgba(255, 255, 255, 0.08);
+  --agy-info-tag-color: #a1a1aa;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -246,12 +260,19 @@ body.vscode-dark #agy-account-switcher-popover {
     --agy-confirm-cancel-bg: rgba(255, 255, 255, 0.08);
     --agy-confirm-cancel-border: rgba(255, 255, 255, 0.14);
     --agy-confirm-cancel-text: #e4e4e7;
-    --agy-info-circle-bg: rgba(255, 255, 255, 0.1);
-    --agy-info-circle-border: rgba(255, 255, 255, 0.16);
-    --agy-info-circle-text: #cbd5e1;
-    --agy-info-tooltip-bg: #141419;
+    --agy-info-circle-bg: rgba(59, 130, 246, 0.15);
+    --agy-info-circle-border: rgba(59, 130, 246, 0.35);
+    --agy-info-circle-text: #93c5fd;
+    --agy-info-tooltip-bg: rgba(26, 27, 34, 0.98);
     --agy-info-tooltip-text: #f4f4f5;
-    --agy-info-tooltip-border: rgba(255, 255, 255, 0.18);
+    --agy-info-tooltip-sub: #a1a1aa;
+    --agy-info-tooltip-border: rgba(255, 255, 255, 0.12);
+    --agy-info-tooltip-shadow: 0 20px 45px -4px rgba(0, 0, 0, 0.65), 0 4px 16px rgba(0, 0, 0, 0.4);
+    --agy-info-pill-bg: rgba(37, 99, 235, 0.22);
+    --agy-info-pill-color: #93c5fd;
+    --agy-info-pill-border: rgba(59, 130, 246, 0.35);
+    --agy-info-tag-bg: rgba(255, 255, 255, 0.08);
+    --agy-info-tag-color: #a1a1aa;
   }
 }
 
@@ -454,11 +475,11 @@ body.vscode-dark #agy-account-switcher-popover {
 }
 
 .agy-info-badge {
-  width: 16px;
-  height: 16px;
-  min-width: 16px;
+  width: 17px;
+  height: 17px;
+  min-width: 17px;
   border-radius: 50%;
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 700;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   display: flex;
@@ -468,28 +489,28 @@ body.vscode-dark #agy-account-switcher-popover {
   background: var(--agy-info-circle-bg);
   border: 1px solid var(--agy-info-circle-border);
   color: var(--agy-info-circle-text);
-  transition: all 0.18s ease;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
   user-select: none;
 }
 
 .agy-info-wrapper:hover .agy-info-badge,
 .agy-info-wrapper:focus .agy-info-badge {
-  background: #3b82f6;
+  background: #2563eb;
   color: #ffffff;
-  border-color: #2563eb;
-  transform: scale(1.1);
-  box-shadow: 0 1px 6px rgba(59, 130, 246, 0.4);
+  border-color: #1d4ed8;
+  transform: scale(1.15);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
 }
 
 .agy-info-popover {
   position: absolute;
   right: -6px;
   top: calc(100% + 8px);
-  width: 234px;
-  padding: 10px 13px;
-  border-radius: 11px;
+  width: 252px;
+  padding: 12px 14px;
+  border-radius: 13px;
   font-size: 11px;
-  line-height: 1.45;
+  line-height: 1.5;
   z-index: 100;
   pointer-events: none;
   opacity: 0;
@@ -498,7 +519,9 @@ body.vscode-dark #agy-account-switcher-popover {
   background: var(--agy-info-tooltip-bg);
   color: var(--agy-info-tooltip-text);
   border: 1px solid var(--agy-info-tooltip-border);
-  box-shadow: 0 12px 28px -4px rgba(0, 0, 0, 0.45);
+  box-shadow: var(--agy-info-tooltip-shadow);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   text-align: left;
 }
@@ -506,25 +529,55 @@ body.vscode-dark #agy-account-switcher-popover {
 .agy-info-popover::after {
   content: "";
   position: absolute;
-  right: 10px;
+  right: 12px;
   bottom: 100%;
-  border: 5px solid transparent;
-  border-bottom-color: var(--agy-info-tooltip-bg);
+  border: 6px solid transparent;
+  border-bottom-color: var(--agy-info-tooltip-border);
 }
 
-.agy-info-popover-title {
+.agy-info-popover-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 7px;
+}
+
+.agy-info-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10.5px;
   font-weight: 700;
-  font-size: 11px;
-  margin-bottom: 4px;
-  color: #60a5fa;
-  letter-spacing: -0.1px;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: var(--agy-info-pill-bg);
+  color: var(--agy-info-pill-color);
+  border: 1px solid var(--agy-info-pill-border);
+  letter-spacing: 0.02em;
+}
+
+.agy-info-dot {
+  width: 5.5px;
+  height: 5.5px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.7);
+}
+
+.agy-info-tag {
+  font-size: 9.5px;
+  font-weight: 600;
+  padding: 1.5px 5.5px;
+  border-radius: 4px;
+  background: var(--agy-info-tag-bg);
+  color: var(--agy-info-tag-color);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 .agy-info-popover-text {
-  color: var(--agy-info-tooltip-text);
-  opacity: 0.92;
+  color: var(--agy-info-tooltip-sub);
   font-size: 10.5px;
-  line-height: 1.4;
+  line-height: 1.45;
   margin: 0;
 }
 
