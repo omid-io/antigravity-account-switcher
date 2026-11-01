@@ -22,10 +22,13 @@
     style.textContent = cssText;
   }
 
-  // 2. Cleanup legacy wrappers or buttons if present
+  // 2. Cleanup legacy wrappers, dots or buttons if present
   function cleanupLegacy() {
     const legacyBtn = document.getElementById('agy-switcher-sidebar-btn');
     if (legacyBtn) legacyBtn.remove();
+
+    const oldDot = document.getElementById('agy-avatar-quota-dot');
+    if (oldDot) oldDot.remove();
 
     const rowWrapper = document.getElementById('agy-settings-row-wrapper');
     if (rowWrapper && rowWrapper.parentElement) {
@@ -70,7 +73,6 @@
           <img id="agy-avatar-img" class="agy-avatar-img" src="" alt="Google Profile" style="display:none;" />
           <div id="agy-avatar-fallback" class="agy-avatar-fallback">G</div>
         </div>
-        <div id="agy-avatar-quota-dot" class="agy-avatar-quota-dot" title="Live Quota"></div>
       `;
 
       avatarBtn.addEventListener('click', (e) => {
@@ -245,7 +247,6 @@
 
     const img = document.getElementById('agy-avatar-img');
     const fallback = document.getElementById('agy-avatar-fallback');
-    const dot = document.getElementById('agy-avatar-quota-dot');
     const headerAvatar = document.getElementById('agy-header-avatar');
     const headerTitle = document.getElementById('agy-header-title');
     const headerEmail = document.getElementById('agy-header-email');
@@ -263,12 +264,6 @@
 
     if (headerTitle) headerTitle.innerText = active.name || active.label || 'Active Account';
     if (headerEmail) headerEmail.innerText = active.email;
-
-    if (dot) {
-      dot.className = 'agy-avatar-quota-dot';
-      if (active.remainingPercent <= 20) dot.classList.add('low');
-      else if (active.remainingPercent <= 50) dot.classList.add('med');
-    }
   }
 
   function updateAutoSwitchUI(active) {
