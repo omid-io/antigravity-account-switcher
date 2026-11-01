@@ -99,7 +99,18 @@
 
   // 4. Inject Flyout Popover Structure (Soft Light)
   function injectPopoverStructure() {
-    if (document.getElementById('agy-account-switcher-popover')) return;
+    const existingPopover = document.getElementById('agy-account-switcher-popover');
+    if (existingPopover) {
+      const closeBtn = document.getElementById('agy-popover-close');
+      if (closeBtn) {
+        closeBtn.onclick = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          closePopover();
+        };
+      }
+      return;
+    }
 
     const popover = document.createElement('div');
     popover.id = 'agy-account-switcher-popover';
@@ -116,7 +127,7 @@
             <div id="agy-header-email" class="agy-popover-header-email">Loading...</div>
           </div>
         </div>
-        <button id="agy-popover-close" class="agy-popover-close-btn" title="Close">
+        <button id="agy-popover-close" class="agy-popover-close-btn" title="Close" onclick="window.__AGY_SWITCHER__?.closePopover()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
             <line x1="18" y1="6" x2="6" y2="18"></line>
             <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -187,7 +198,7 @@
             <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
             </svg>
-            <span class="agy-footer-info">v1.1</span>
+            <span class="agy-footer-info">v1.2.0</span>
           </a>
         </div>
       </div>
@@ -204,7 +215,7 @@
           </div>
           <div class="agy-update-body">
             <div class="agy-update-version-row">
-              <span class="agy-ver-tag old" id="agy-cur-ver">v1.1.0</span>
+              <span class="agy-ver-tag old" id="agy-cur-ver">v1.2.0</span>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
               <span class="agy-ver-tag new" id="agy-new-ver">v1.2.0</span>
             </div>
@@ -241,10 +252,17 @@
     document.body.appendChild(popover);
 
     // Event listeners
-    document.getElementById('agy-popover-close').addEventListener('click', closePopover);
-    document.getElementById('agy-refresh-btn').addEventListener('click', onRefreshClick);
-    document.getElementById('agy-auto-switch-container').addEventListener('click', onToggleAutoSwitch);
-    document.getElementById('agy-add-account-btn').addEventListener('click', onAddAccountClick);
+    const closeBtn = document.getElementById('agy-popover-close');
+    if (closeBtn) {
+      closeBtn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        closePopover();
+      };
+    }
+    document.getElementById('agy-refresh-btn')?.addEventListener('click', onRefreshClick);
+    document.getElementById('agy-auto-switch-container')?.addEventListener('click', onToggleAutoSwitch);
+    document.getElementById('agy-add-account-btn')?.addEventListener('click', onAddAccountClick);
     document.getElementById('agy-update-pill')?.addEventListener('click', showUpdateDialog);
     document.getElementById('agy-update-close')?.addEventListener('click', hideUpdateDialog);
     document.getElementById('agy-update-copy-btn')?.addEventListener('click', copyUpdateCommand);
@@ -253,19 +271,33 @@
 
     // Click outside to close popover
     document.addEventListener('click', (e) => {
-      if (!isPopoverOpen) return;
+      const popoverEl = document.getElementById('agy-account-switcher-popover');
+      const isOpen = popoverEl ? popoverEl.classList.contains('open') : isPopoverOpen;
+      if (!isOpen) return;
       const target = e.target;
       const trigger = document.getElementById('agy-avatar-trigger-btn');
-      if (popover.contains(target) || (trigger && trigger.contains(target))) {
+      if ((popoverEl && popoverEl.contains(target)) || (trigger && trigger.contains(target))) {
         return;
       }
       closePopover();
+    });
+
+    // Press Escape to close popover
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        const popoverEl = document.getElementById('agy-account-switcher-popover');
+        if (popoverEl && popoverEl.classList.contains('open')) {
+          closePopover();
+        }
+      }
     });
   }
 
   // 5. Popover Open, Close, Toggle
   async function togglePopover() {
-    if (isPopoverOpen) {
+    const popover = document.getElementById('agy-account-switcher-popover');
+    const isOpen = popover ? popover.classList.contains('open') : isPopoverOpen;
+    if (isOpen) {
       closePopover();
     } else {
       await openPopover();
@@ -276,6 +308,11 @@
     const popover = document.getElementById('agy-account-switcher-popover');
     const trigger = document.getElementById('agy-avatar-trigger-btn');
     if (!popover) return;
+
+    // Clean any residual inline overrides
+    popover.style.removeProperty('opacity');
+    popover.style.removeProperty('visibility');
+    popover.style.removeProperty('pointer-events');
 
     // Calculate position adjacent to the sidebar
     if (trigger) {
@@ -295,7 +332,13 @@
 
   function closePopover() {
     const popover = document.getElementById('agy-account-switcher-popover');
-    if (popover) popover.classList.remove('open');
+    if (popover) {
+      popover.classList.remove('open');
+      // Remove any inline overrides so CSS !important applies cleanly
+      popover.style.removeProperty('opacity');
+      popover.style.removeProperty('visibility');
+      popover.style.removeProperty('pointer-events');
+    }
     isPopoverOpen = false;
     hideConfirm();
   }
@@ -394,10 +437,15 @@
               </div>
             </div>
             <div class="agy-card-actions">
-              <span class="agy-status-pill ${acc.status}">${acc.status}</span>
               ${acc.isActive 
-                ? `<button class="agy-card-switch-btn" disabled>Active</button>` 
-                : `<button class="agy-card-switch-btn" onclick="window.__AGY_SWITCHER__.requestSwitch('${acc.id}', '${acc.label}', '${acc.email}')">Switch</button>`
+                ? `<div class="agy-active-indicator" title="Currently selected active session">
+                     <span class="agy-active-dot"></span>
+                     <span>Active</span>
+                   </div>` 
+                : `<button class="agy-card-switch-btn" onclick="window.__AGY_SWITCHER__.requestSwitch('${acc.id}', '${acc.label}', '${acc.email}')">
+                     <span>Switch</span>
+                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                   </button>`
               }
             </div>
           </div>

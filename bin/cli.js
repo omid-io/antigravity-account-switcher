@@ -44,7 +44,8 @@ async function dispatchSmart() {
   }
 
   console.log(`✅ Already up-to-date (v${installedVer}).`);
-  console.log('⚡ Refreshing live plugin in Antigravity window...');
+  console.log('⚡ Syncing files and refreshing live plugin in Antigravity window...');
+  await install({ silent: true });
   const reloaded = await triggerLiveReload();
   if (reloaded) {
     console.log('✨ Live hot-reload applied to active Antigravity window.');
