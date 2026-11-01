@@ -66,9 +66,26 @@ flowchart TD
 
 ---
 
-## 🚀 Installation
+## 🚀 Installation & Instant Updates
 
-### Option 1: One-Click Antigravity Plugin (Recommended)
+### Option 1: 1-Line npm / npx (Zero Clone Needed)
+
+Install directly into Antigravity with a single command:
+```bash
+npx antigravity-account-switcher install
+```
+
+To update to the latest release with live hot-reload:
+```bash
+npx antigravity-account-switcher update
+```
+
+Check system status and live account health:
+```bash
+npx antigravity-account-switcher status
+```
+
+### Option 2: Clone from GitHub
 
 1. Clone the repository:
    ```bash
@@ -80,9 +97,7 @@ flowchart TD
    ```bash
    npm run install-plugin
    ```
-   *This installs the switcher directly into `~/.gemini/config/plugins/antigravity-account-switcher`.*
-
-3. Start Antigravity (or start the sidecar manually with `npm start`).
+   *This links and installs the switcher directly into `~/.gemini/config/plugins/antigravity-account-switcher`.*
 
 ---
 
@@ -92,16 +107,19 @@ The package also includes a standalone CLI for headless operations:
 
 ```bash
 # Display all accounts, live quotas, and countdown timers
-npx antigravity-switcher list
+npx antigravity-account-switcher list
 
 # Switch to an account by email or ID
-npx antigravity-switcher switch personal@gmail.com
+npx antigravity-account-switcher switch personal@gmail.com
 
 # Snapshot the currently active session with a custom label
-npx antigravity-switcher snapshot "Work Account"
+npx antigravity-account-switcher snapshot "Work Account"
 
-# Start the sidecar in standalone mode
-npx antigravity-switcher start
+# Check if newer updates are available
+npx antigravity-account-switcher check-update
+
+# Start the sidecar daemon manually
+npx antigravity-account-switcher start
 ```
 
 ---

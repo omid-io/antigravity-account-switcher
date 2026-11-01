@@ -7,6 +7,7 @@ import { CdpBridge } from './cdp-bridge.js';
 import { initVault, listProfiles, switchProfile, snapshotCurrentSession } from './vault-manager.js';
 import { getAllAccountsQuotaSummary, fetchActiveQuota } from './quota-poller.js';
 import { AutoSwitcher } from './auto-switcher.js';
+import { checkForUpdates } from './update-checker.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -120,6 +121,14 @@ async function main() {
 
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ ok: true, message: 'Logged out. Please log in with the new account.' }));
+        return;
+      }
+
+      if (pathname === '/api/check-update' && req.method === 'GET') {
+        const force = url.searchParams.get('force') === 'true';
+        const info = await checkForUpdates(force);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(info));
         return;
       }
 

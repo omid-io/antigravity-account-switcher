@@ -174,7 +174,55 @@
           </svg>
           <span>Add Account</span>
         </button>
-        <div class="agy-footer-info">Antigravity Switcher v1.1</div>
+
+        <div class="agy-footer-right">
+          <!-- Update Available Badge (Hidden by default, shown if update found) -->
+          <div id="agy-update-pill" class="agy-update-pill" style="display:none;" title="Click to view update details">
+            <span class="agy-update-dot"></span>
+            <span id="agy-update-text">Update</span>
+          </div>
+
+          <!-- App Version & GitHub Link -->
+          <a id="agy-github-link" class="agy-footer-github" href="https://github.com/omid-io/antigravity-account-switcher" target="_blank" rel="noopener noreferrer" title="View Source & Star on GitHub">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+            </svg>
+            <span class="agy-footer-info">v1.1</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Update Details Dialog (Soft Glass) -->
+      <div id="agy-update-dialog" style="display:none;">
+        <div class="agy-update-box">
+          <div class="agy-update-header">
+            <div class="agy-update-header-title">
+              <span class="agy-update-badge-icon">🚀</span>
+              <span>New Update Available</span>
+            </div>
+            <button id="agy-update-close" class="agy-popover-close-btn" title="Close">&times;</button>
+          </div>
+          <div class="agy-update-body">
+            <div class="agy-update-version-row">
+              <span class="agy-ver-tag old" id="agy-cur-ver">v1.1.0</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              <span class="agy-ver-tag new" id="agy-new-ver">v1.2.0</span>
+            </div>
+            <div class="agy-update-cmd-box">
+              <span class="agy-cmd-label">Run in terminal to update:</span>
+              <div class="agy-cmd-wrapper">
+                <code id="agy-cmd-code">npx antigravity-account-switcher@latest update</code>
+                <button id="agy-copy-inline-btn" class="agy-copy-inline-btn" title="Copy to clipboard">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="agy-update-actions">
+            <button id="agy-update-github-btn" class="agy-cancel-btn">View on GitHub</button>
+            <button id="agy-update-copy-btn" class="agy-confirm-btn">Copy Command</button>
+          </div>
+        </div>
       </div>
 
       <!-- Confirmation Dialog (Soft Light) -->
@@ -197,6 +245,11 @@
     document.getElementById('agy-refresh-btn').addEventListener('click', onRefreshClick);
     document.getElementById('agy-auto-switch-container').addEventListener('click', onToggleAutoSwitch);
     document.getElementById('agy-add-account-btn').addEventListener('click', onAddAccountClick);
+    document.getElementById('agy-update-pill')?.addEventListener('click', showUpdateDialog);
+    document.getElementById('agy-update-close')?.addEventListener('click', hideUpdateDialog);
+    document.getElementById('agy-update-copy-btn')?.addEventListener('click', copyUpdateCommand);
+    document.getElementById('agy-copy-inline-btn')?.addEventListener('click', copyUpdateCommand);
+    document.getElementById('agy-update-github-btn')?.addEventListener('click', openUpdateGitHub);
 
     // Click outside to close popover
     document.addEventListener('click', (e) => {
@@ -263,6 +316,9 @@
       updateAutoSwitchUI(isAutoSwitchActive);
       renderAccountCards(cachedAccounts);
       updateTriggerAvatar(cachedAccounts);
+
+      // Check for updates in background
+      checkUpdateStatus();
     } catch (err) {
       console.error('[agy-switcher] Error loading accounts:', err);
     } finally {
@@ -471,6 +527,72 @@
     } finally {
       if (btn) btn.innerHTML = `<span>Add Account</span>`;
     }
+  }
+
+  // 7. Update Management
+  let cachedUpdateInfo = null;
+
+  async function checkUpdateStatus() {
+    try {
+      const res = await fetch(`${API_BASE}/api/check-update`);
+      if (!res.ok) return;
+      const data = await res.json();
+      cachedUpdateInfo = data;
+
+      const pill = document.getElementById('agy-update-pill');
+      const text = document.getElementById('agy-update-text');
+      if (pill && data.hasUpdate) {
+        if (text) text.innerText = `v${data.latestVersion}`;
+        pill.style.display = 'inline-flex';
+      } else if (pill) {
+        pill.style.display = 'none';
+      }
+    } catch (e) {
+      console.warn('[agy-switcher] Update check failed:', e.message);
+    }
+  }
+
+  function showUpdateDialog() {
+    const dialog = document.getElementById('agy-update-dialog');
+    if (!dialog) return;
+
+    if (cachedUpdateInfo) {
+      const curEl = document.getElementById('agy-cur-ver');
+      const newEl = document.getElementById('agy-new-ver');
+      const cmdEl = document.getElementById('agy-cmd-code');
+      if (curEl) curEl.innerText = `v${cachedUpdateInfo.currentVersion}`;
+      if (newEl) newEl.innerText = `v${cachedUpdateInfo.latestVersion}`;
+      if (cmdEl && cachedUpdateInfo.updateCommand) cmdEl.innerText = cachedUpdateInfo.updateCommand;
+    }
+    dialog.style.display = 'flex';
+  }
+
+  function hideUpdateDialog() {
+    const dialog = document.getElementById('agy-update-dialog');
+    if (dialog) dialog.style.display = 'none';
+  }
+
+  async function copyUpdateCommand() {
+    const cmdEl = document.getElementById('agy-cmd-code');
+    const copyBtn = document.getElementById('agy-update-copy-btn');
+    if (!cmdEl) return;
+    try {
+      await navigator.clipboard.writeText(cmdEl.innerText);
+      if (copyBtn) {
+        const orig = copyBtn.innerText;
+        copyBtn.innerText = 'Copied!';
+        copyBtn.style.background = '#10b981';
+        setTimeout(() => {
+          copyBtn.innerText = orig;
+          copyBtn.style.background = '';
+        }, 1800);
+      }
+    } catch {}
+  }
+
+  function openUpdateGitHub() {
+    const url = cachedUpdateInfo?.releaseUrl || cachedUpdateInfo?.repoUrl || 'https://github.com/omid-io/antigravity-account-switcher';
+    window.open(url, '_blank');
   }
 
   // 8. Global Hook
