@@ -1,0 +1,20 @@
+# Project State (Mandatory Git Ignore)
+PROJECT_STATE.md
+
+# Node & Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment & Local Secrets / Sessions
+.env
+.env.local
+profiles/
+*.token
+*.session
+
+# OS & Temp Files
+.DS_Store
+Thumbs.db
+*.tmp
