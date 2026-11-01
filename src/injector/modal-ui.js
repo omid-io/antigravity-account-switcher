@@ -332,7 +332,7 @@
           <!-- Dual Quotas: 5-Hour Limit & Weekly Limit -->
           <div class="agy-card-quotas-wrapper">
             <!-- 5-Hour Limit -->
-            <div class="agy-quota-metric">
+            <div class="agy-quota-metric" title="${acc.fiveHourDesc || ''}">
               <div class="agy-quota-metric-header">
                 <div class="agy-quota-title">
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
@@ -353,7 +353,7 @@
             </div>
 
             <!-- Weekly Limit -->
-            <div class="agy-quota-metric">
+            <div class="agy-quota-metric" title="${acc.weeklyDesc || ''}">
               <div class="agy-quota-metric-header">
                 <div class="agy-quota-title">
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">

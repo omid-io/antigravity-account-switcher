@@ -37,8 +37,8 @@ export function calculateResetCountdown(resetTimeIso) {
 }
 
 /**
- * Calls GetUserStatus RPC via CDP to retrieve the live active quota and Google profile picture.
- * Extracts both 5-hour rolling limit (Flash) and weekly limit (Thinking/Claude).
+ * Calls RetrieveUserQuotaSummary and GetUserStatus RPCs via CDP to retrieve 
+ * the live active quota (5-hour limit and weekly limit) and Google profile metadata.
  * @param {import('./cdp-bridge.js').CdpBridge} cdp 
  */
 export async function fetchActiveQuota(cdp) {
@@ -47,35 +47,87 @@ export async function fetchActiveQuota(cdp) {
       try {
         const csrf = window.__APP_CONFIG__?.csrfToken || '';
         const port = window.location.port || '51339';
-        const res = await fetch('https://127.0.0.1:' + port + '/exa.language_server_pb.LanguageServerService/GetUserStatus', {
+        const headers = {
+          'Content-Type': 'application/json',
+          'x-codeium-csrf-token': csrf
+        };
+
+        // 1. Fetch User Profile Info (name, email, plan, avatar)
+        const statusRes = await fetch('https://127.0.0.1:' + port + '/exa.language_server_pb.LanguageServerService/GetUserStatus', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-codeium-csrf-token': csrf
-          },
+          headers,
           body: JSON.stringify({})
         });
-        if (!res.ok) return { error: 'HTTP ' + res.status };
-        const data = await res.json();
-        const u = data.userStatus || {};
-        const configs = u.cascadeModelConfigData?.clientModelConfigs || [];
+        const statusData = statusRes.ok ? await statusRes.json() : {};
+        const u = statusData.userStatus || {};
 
-        // 1. Five-Hour Rolling Model (Gemini Flash or first active with quota)
-        const flashModel = configs.find(c => c.modelId && c.modelId.includes('flash') && c.quotaInfo && typeof c.quotaInfo.remainingFraction === 'number')
-                        || configs.find(c => c.quotaInfo && typeof c.quotaInfo.remainingFraction === 'number');
+        // 2. Fetch Official Quota Summary (Gemini Weekly & 5-Hour rolling buckets)
+        let fiveHourQuota = 1.0;
+        let fiveHourResetTime = null;
+        let fiveHourDesc = '';
+        let weeklyQuota = 1.0;
+        let weeklyResetTime = null;
+        let weeklyDesc = '';
 
-        // 2. Weekly / Premium Model (Claude Sonnet/Opus Thinking or non-flash)
-        const weeklyModel = configs.find(c => c.modelId && (c.modelId.includes('claude') || c.modelId.includes('thinking') || c.modelId.includes('sonnet')) && c.quotaInfo && typeof c.quotaInfo.remainingFraction === 'number');
+        try {
+          const quotaRes = await fetch('https://127.0.0.1:' + port + '/exa.language_server_pb.LanguageServerService/RetrieveUserQuotaSummary', {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({})
+          });
+          if (quotaRes.ok) {
+            const quotaData = await quotaRes.json();
+            const groups = quotaData.response?.groups || [];
+            // Primary group is Gemini Models (or first group)
+            const geminiGroup = groups.find(g => g.displayName && g.displayName.includes('Gemini')) || groups[0];
+            if (geminiGroup && geminiGroup.buckets) {
+              const weeklyBucket = geminiGroup.buckets.find(b => b.window === 'weekly' || b.bucketId === 'gemini-weekly');
+              const fiveHourBucket = geminiGroup.buckets.find(b => b.window === '5h' || b.bucketId === 'gemini-5h');
+
+              if (weeklyBucket) {
+                weeklyQuota = typeof weeklyBucket.remainingFraction === 'number' ? weeklyBucket.remainingFraction : 1.0;
+                weeklyResetTime = weeklyBucket.resetTime || null;
+                weeklyDesc = weeklyBucket.description || '';
+              }
+              if (fiveHourBucket) {
+                fiveHourQuota = typeof fiveHourBucket.remainingFraction === 'number' ? fiveHourBucket.remainingFraction : 1.0;
+                fiveHourResetTime = fiveHourBucket.resetTime || null;
+                fiveHourDesc = fiveHourBucket.description || '';
+              }
+            }
+          }
+        } catch (eQuota) {
+          console.warn('[quota-poller] RetrieveUserQuotaSummary failed, falling back to clientModelConfigs:', eQuota);
+        }
+
+        // Fallback to clientModelConfigs if RetrieveUserQuotaSummary didn't provide buckets
+        if (fiveHourResetTime === null && weeklyResetTime === null) {
+          const configs = u.cascadeModelConfigData?.clientModelConfigs || [];
+          const flashModel = configs.find(c => c.modelId && c.modelId.includes('flash') && c.quotaInfo && typeof c.quotaInfo.remainingFraction === 'number')
+                          || configs.find(c => c.quotaInfo && typeof c.quotaInfo.remainingFraction === 'number');
+          const weeklyModel = configs.find(c => c.modelId && (c.modelId.includes('claude') || c.modelId.includes('thinking') || c.modelId.includes('sonnet')) && c.quotaInfo && typeof c.quotaInfo.remainingFraction === 'number');
+
+          if (flashModel && flashModel.quotaInfo) {
+            fiveHourQuota = flashModel.quotaInfo.remainingFraction;
+            fiveHourResetTime = flashModel.quotaInfo.resetTime || null;
+          }
+          if (weeklyModel && weeklyModel.quotaInfo) {
+            weeklyQuota = weeklyModel.quotaInfo.remainingFraction;
+            weeklyResetTime = weeklyModel.quotaInfo.resetTime || null;
+          }
+        }
 
         return {
           email: u.email || '',
           name: u.name || '',
           plan: u.planStatus?.planInfo?.planName || 'Pro',
           profilePictureUrl: u.profilePictureUrl || '',
-          fiveHourQuota: flashModel ? flashModel.quotaInfo.remainingFraction : 1.0,
-          fiveHourResetTime: flashModel ? flashModel.quotaInfo.resetTime : null,
-          weeklyQuota: weeklyModel ? weeklyModel.quotaInfo.remainingFraction : (flashModel ? flashModel.quotaInfo.remainingFraction : 1.0),
-          weeklyResetTime: weeklyModel ? weeklyModel.quotaInfo.resetTime : null
+          fiveHourQuota,
+          fiveHourResetTime,
+          fiveHourDesc,
+          weeklyQuota,
+          weeklyResetTime,
+          weeklyDesc
         };
       } catch (e) {
         return { error: e.message };
@@ -98,7 +150,9 @@ export async function fetchActiveQuota(cdp) {
         result.profilePictureUrl,
         result.name,
         result.weeklyQuota,
-        result.weeklyResetTime
+        result.weeklyResetTime,
+        result.fiveHourDesc,
+        result.weeklyDesc
       );
     }
 
@@ -157,10 +211,12 @@ export async function getAllAccountsQuotaSummary(cdp) {
       fiveHourFraction,
       fiveHourPercent,
       fiveHourCountdownText: fiveHourCountdown.text,
+      fiveHourDesc: p.fiveHourDesc || '',
       // Weekly Limit properties
       weeklyFraction,
       weeklyPercent,
       weeklyCountdownText: weeklyCountdown.text,
+      weeklyDesc: p.weeklyDesc || '',
       // Legacy backward-compatibility mappings
       remainingFraction: fiveHourFraction,
       remainingPercent: fiveHourPercent,
