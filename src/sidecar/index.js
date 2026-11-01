@@ -172,6 +172,18 @@ async function main() {
     }
   });
 
+  // Watchdog: Ensure UI is injected even if page loaded before connection
+  setInterval(async () => {
+    if (cdp.isConnected) {
+      try {
+        const injected = await cdp.evaluate('!!document.getElementById("agy-avatar-trigger-btn")');
+        if (!injected) {
+          await injectUI();
+        }
+      } catch {}
+    }
+  }, 3500);
+
   // Connect CDP
   await cdp.connect();
 }

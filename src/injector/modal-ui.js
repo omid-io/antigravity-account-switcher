@@ -56,9 +56,19 @@
     const container = settingsBtn.parentElement;
     container.style.position = 'relative';
 
-    // If avatar button is already securely mounted inside the container, do not touch DOM
+    // If avatar button is already securely mounted inside the container, check badge structure
     const existingAvatar = document.getElementById('agy-avatar-trigger-btn');
     if (existingAvatar && existingAvatar.parentElement === container) {
+      if (!existingAvatar.querySelector('.agy-avatar-badge')) {
+        existingAvatar.innerHTML = `
+          <div class="agy-avatar-badge">
+            <div class="agy-avatar-inner-ring">
+              <img id="agy-avatar-img" class="agy-avatar-img" src="" alt="Google Profile" style="display:none;" />
+              <div id="agy-avatar-fallback" class="agy-avatar-fallback">G</div>
+            </div>
+          </div>
+        `;
+      }
       return;
     }
 
@@ -69,9 +79,11 @@
 
     if (!existingAvatar) {
       avatarBtn.innerHTML = `
-        <div class="agy-avatar-inner-ring">
-          <img id="agy-avatar-img" class="agy-avatar-img" src="" alt="Google Profile" style="display:none;" />
-          <div id="agy-avatar-fallback" class="agy-avatar-fallback">G</div>
+        <div class="agy-avatar-badge">
+          <div class="agy-avatar-inner-ring">
+            <img id="agy-avatar-img" class="agy-avatar-img" src="" alt="Google Profile" style="display:none;" />
+            <div id="agy-avatar-fallback" class="agy-avatar-fallback">G</div>
+          </div>
         </div>
       `;
 
@@ -410,8 +422,11 @@
       injectAvatarTriggerButton();
       injectPopoverStructure();
       fetchAndRenderAccounts(false);
-      // Check every 3 seconds ONLY if button is missing (zero-mutation when present)
-      setInterval(() => {
+      // Check every 3 seconds ONLY if button is missing (clearing any stale interval)
+      if (window.__AGY_SWITCHER_INTERVAL__) {
+        clearInterval(window.__AGY_SWITCHER_INTERVAL__);
+      }
+      window.__AGY_SWITCHER_INTERVAL__ = setInterval(() => {
         const btn = document.getElementById('agy-avatar-trigger-btn');
         if (!btn || !btn.parentElement) {
           injectAvatarTriggerButton();

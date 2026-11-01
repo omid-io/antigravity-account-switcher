@@ -77,9 +77,10 @@ export class CdpBridge extends EventEmitter {
           this.pageUrl = target.url;
           console.log(`[cdp-bridge] Connected to Antigravity window: "${target.title}" (Port ${this.port})`);
 
-          // Enable Console and Network domains to observe errors (like 429 quota exhaustion)
+          // Enable Console, Network and Page domains to observe errors and reloads
           this.send('Console.enable');
           this.send('Network.enable');
+          this.send('Page.enable');
 
           this.emit('connected', target);
           resolve(true);
