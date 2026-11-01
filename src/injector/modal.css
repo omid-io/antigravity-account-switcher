@@ -1,47 +1,44 @@
 /* Antigravity Multi-Account Switcher - Soft Light Popover Theme */
 
-/* Avatar Button in Settings Row */
-.agy-settings-row-wrapper {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-  gap: 6px !important;
-  width: 100% !important;
+/* Ensure Settings parent has relative positioning */
+div:has(> button[data-testid="settings-button"]) {
+  position: relative !important;
 }
 
-.agy-settings-row-wrapper > button[data-testid="settings-button"] {
-  flex: 1 !important;
-  min-width: 0 !important;
+button[data-testid="settings-button"] {
+  padding-right: 38px !important;
 }
 
 /* Google Pro Circular Avatar Trigger */
 #agy-avatar-trigger-btn {
-  width: 32px;
-  height: 32px;
-  min-width: 32px;
-  border-radius: 50%;
-  padding: 2.2px;
-  background: conic-gradient(from 180deg at 50% 50%, #4285F4 0deg, #EA4335 90deg, #FBBC05 180deg, #34A853 270deg, #4285F4 360deg);
-  border: none;
-  cursor: pointer;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
-  box-shadow: 0 2px 8px rgba(66, 133, 244, 0.35);
-  outline: none;
-  user-select: none;
-  flex-shrink: 0;
+  position: absolute !important;
+  right: 14px !important;
+  bottom: 8px !important;
+  width: 26px !important;
+  height: 26px !important;
+  min-width: 26px !important;
+  border-radius: 50% !important;
+  padding: 2px !important;
+  background: conic-gradient(from 180deg at 50% 50%, #4285F4 0deg, #EA4335 90deg, #FBBC05 180deg, #34A853 270deg, #4285F4 360deg) !important;
+  border: none !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease !important;
+  box-shadow: 0 2px 6px rgba(66, 133, 244, 0.35) !important;
+  outline: none !important;
+  user-select: none !important;
+  z-index: 10 !important;
 }
 
 #agy-avatar-trigger-btn:hover {
-  transform: scale(1.08);
-  box-shadow: 0 4px 14px rgba(66, 133, 244, 0.55);
+  transform: scale(1.12) !important;
+  box-shadow: 0 4px 12px rgba(66, 133, 244, 0.55) !important;
 }
 
 #agy-avatar-trigger-btn:active {
-  transform: scale(0.96);
+  transform: scale(0.95) !important;
 }
 
 .agy-avatar-inner-ring {
@@ -69,7 +66,7 @@
   background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
   color: #ffffff;
   font-weight: 700;
-  font-size: 11px;
+  font-size: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -81,8 +78,8 @@
   position: absolute;
   bottom: -1px;
   right: -1px;
-  width: 10px;
-  height: 10px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
   border: 1.5px solid #ffffff;
   background: #10b981;

@@ -22,60 +22,65 @@
     style.textContent = cssText;
   }
 
-  // 2. Cleanup any legacy text buttons
-  function cleanupLegacyElements() {
+  // 2. Cleanup legacy wrappers or buttons if present
+  function cleanupLegacy() {
     const legacyBtn = document.getElementById('agy-switcher-sidebar-btn');
     if (legacyBtn) legacyBtn.remove();
+
+    const rowWrapper = document.getElementById('agy-settings-row-wrapper');
+    if (rowWrapper && rowWrapper.parentElement) {
+      const container = rowWrapper.parentElement;
+      const settingsBtn = rowWrapper.querySelector('button[data-testid="settings-button"]');
+      if (settingsBtn) {
+        container.insertBefore(settingsBtn, rowWrapper);
+      }
+      rowWrapper.remove();
+    }
   }
 
   // 3. Inject ONLY the Circular Google Pro Avatar Button opposite Settings
   function injectAvatarTriggerButton() {
-    cleanupLegacyElements();
+    cleanupLegacy();
 
     const settingsBtn = Array.from(document.querySelectorAll('button')).find(b => 
       b.getAttribute('data-testid') === 'settings-button' || (b.innerText && b.innerText.trim() === 'Settings')
     );
 
     if (!settingsBtn || !settingsBtn.parentElement) {
-      setTimeout(injectAvatarTriggerButton, 1000);
       return;
     }
 
-    // Check if already injected
-    if (document.getElementById('agy-avatar-trigger-btn')) return;
+    const container = settingsBtn.parentElement;
+    container.style.position = 'relative';
 
-    const parent = settingsBtn.parentElement;
-
-    // Create flex row wrapper to place Settings and Avatar opposite each other
-    let rowWrapper = document.getElementById('agy-settings-row-wrapper');
-    if (!rowWrapper) {
-      rowWrapper = document.createElement('div');
-      rowWrapper.id = 'agy-settings-row-wrapper';
-      rowWrapper.className = 'agy-settings-row-wrapper';
-      parent.insertBefore(rowWrapper, settingsBtn);
-      rowWrapper.appendChild(settingsBtn);
+    // If avatar button is already securely mounted inside the container, do not touch DOM
+    const existingAvatar = document.getElementById('agy-avatar-trigger-btn');
+    if (existingAvatar && existingAvatar.parentElement === container) {
+      return;
     }
 
     // Create Circular Google Pro Avatar Button
-    const avatarBtn = document.createElement('button');
+    const avatarBtn = existingAvatar || document.createElement('button');
     avatarBtn.id = 'agy-avatar-trigger-btn';
     avatarBtn.title = 'Google Account & Live Quotas';
 
-    avatarBtn.innerHTML = `
-      <div class="agy-avatar-inner-ring">
-        <img id="agy-avatar-img" class="agy-avatar-img" src="" alt="Google Profile" style="display:none;" />
-        <div id="agy-avatar-fallback" class="agy-avatar-fallback">G</div>
-      </div>
-      <div id="agy-avatar-quota-dot" class="agy-avatar-quota-dot" title="Live Quota"></div>
-    `;
+    if (!existingAvatar) {
+      avatarBtn.innerHTML = `
+        <div class="agy-avatar-inner-ring">
+          <img id="agy-avatar-img" class="agy-avatar-img" src="" alt="Google Profile" style="display:none;" />
+          <div id="agy-avatar-fallback" class="agy-avatar-fallback">G</div>
+        </div>
+        <div id="agy-avatar-quota-dot" class="agy-avatar-quota-dot" title="Live Quota"></div>
+      `;
 
-    avatarBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      togglePopover();
-    });
+      avatarBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        togglePopover();
+      });
+    }
 
-    rowWrapper.appendChild(avatarBtn);
+    container.appendChild(avatarBtn);
   }
 
   // 4. Inject Flyout Popover Structure (Soft Light)
@@ -406,11 +411,17 @@
   window.__AGY_SWITCHER__ = {
     init: function(css) {
       injectStyles(css);
-      cleanupLegacyElements();
+      cleanupLegacy();
       injectAvatarTriggerButton();
       injectPopoverStructure();
       fetchAndRenderAccounts(false);
-      setInterval(injectAvatarTriggerButton, 2000); // Guard against DOM re-renders
+      // Check every 3 seconds ONLY if button is missing (zero-mutation when present)
+      setInterval(() => {
+        const btn = document.getElementById('agy-avatar-trigger-btn');
+        if (!btn || !btn.parentElement) {
+          injectAvatarTriggerButton();
+        }
+      }, 3000);
     },
     openPopover,
     closePopover,
