@@ -22,8 +22,16 @@
     style.textContent = cssText;
   }
 
-  // 2. Inject Circular Google Pro Avatar Button opposite Settings
+  // 2. Cleanup any legacy text buttons
+  function cleanupLegacyElements() {
+    const legacyBtn = document.getElementById('agy-switcher-sidebar-btn');
+    if (legacyBtn) legacyBtn.remove();
+  }
+
+  // 3. Inject ONLY the Circular Google Pro Avatar Button opposite Settings
   function injectAvatarTriggerButton() {
+    cleanupLegacyElements();
+
     const settingsBtn = Array.from(document.querySelectorAll('button')).find(b => 
       b.getAttribute('data-testid') === 'settings-button' || (b.innerText && b.innerText.trim() === 'Settings')
     );
@@ -70,7 +78,7 @@
     rowWrapper.appendChild(avatarBtn);
   }
 
-  // 3. Inject Flyout Popover Structure
+  // 4. Inject Flyout Popover Structure (Soft Light)
   function injectPopoverStructure() {
     if (document.getElementById('agy-account-switcher-popover')) return;
 
@@ -166,7 +174,7 @@
     });
   }
 
-  // 4. Popover Open, Close, Toggle
+  // 5. Popover Open, Close, Toggle
   async function togglePopover() {
     if (isPopoverOpen) {
       closePopover();
@@ -203,7 +211,7 @@
     hideConfirm();
   }
 
-  // 5. Fetch & Render Accounts
+  // 6. Fetch & Render Accounts
   async function fetchAndRenderAccounts(isRefresh = false) {
     const refreshBtn = document.getElementById('agy-refresh-btn');
     if (isRefresh && refreshBtn) refreshBtn.classList.add('spinning');
@@ -318,7 +326,7 @@
     }).join('');
   }
 
-  // 6. Action Handlers
+  // 7. Action Handlers
   async function onRefreshClick() {
     await fetchAndRenderAccounts(true);
   }
@@ -394,10 +402,11 @@
     }
   }
 
-  // 7. Global Hook
+  // 8. Global Hook
   window.__AGY_SWITCHER__ = {
     init: function(css) {
       injectStyles(css);
+      cleanupLegacyElements();
       injectAvatarTriggerButton();
       injectPopoverStructure();
       fetchAndRenderAccounts(false);
