@@ -1,4 +1,4 @@
-/* Antigravity Multi-Account Switcher - Soft Light Popover Theme */
+/* Antigravity Multi-Account Switcher - Dual Theme (Auto Light & Dark) */
 
 /* Ensure Settings parent has relative positioning */
 div:has(> button[data-testid="settings-button"]) {
@@ -13,7 +13,7 @@ button[data-testid="settings-button"] {
   padding-right: 8px !important;
 }
 
-/* Google Pro Circular Avatar Trigger Button (Sits perfectly opposite Settings) */
+/* Google Pro Circular Avatar Trigger Button (Sits opposite Settings) */
 #agy-avatar-trigger-btn {
   position: absolute !important;
   right: 8px !important;
@@ -45,7 +45,25 @@ button[data-testid="settings-button"] {
   background-color: rgba(0, 0, 0, 0.1) !important;
 }
 
-/* Circular Google Pro Avatar Badge (~20-22px) */
+body.theme-dark #agy-avatar-trigger-btn:hover,
+body.dark #agy-avatar-trigger-btn:hover,
+body.vscode-dark #agy-avatar-trigger-btn:hover {
+  background-color: rgba(255, 255, 255, 0.09) !important;
+}
+
+body.theme-dark #agy-avatar-trigger-btn:active,
+body.dark #agy-avatar-trigger-btn:active,
+body.vscode-dark #agy-avatar-trigger-btn:active {
+  background-color: rgba(255, 255, 255, 0.16) !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  body:not(.theme-light) #agy-avatar-trigger-btn:hover {
+    background-color: rgba(255, 255, 255, 0.09) !important;
+  }
+}
+
+/* Circular Google Pro Avatar Badge (~22px) */
 .agy-avatar-badge {
   width: 22px !important;
   height: 22px !important;
@@ -88,25 +106,6 @@ button[data-testid="settings-button"] {
   display: block !important;
 }
 
-.agy-avatar-inner-ring {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  background: #ffffff;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.agy-avatar-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 50%;
-  display: block;
-}
-
 .agy-avatar-fallback {
   width: 100%;
   height: 100%;
@@ -120,20 +119,159 @@ button[data-testid="settings-button"] {
   text-transform: uppercase;
 }
 
-/* Popover Panel (Soft Light Antigravity UI Design) */
+/* =========================================================================
+   Dual Theme Variable Definitions (Light & Dark)
+   ========================================================================= */
+
+#agy-account-switcher-popover {
+  /* Default: Soft Light Theme */
+  --agy-bg: rgba(255, 255, 255, 0.98);
+  --agy-border: rgba(226, 232, 240, 0.95);
+  --agy-shadow: 0 20px 48px -10px rgba(15, 23, 42, 0.16), 0 2px 10px rgba(15, 23, 42, 0.05);
+  --agy-text-main: #0f172a;
+  --agy-text-muted: #64748b;
+  --agy-header-bg: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+  --agy-header-border: #f1f5f9;
+  --agy-toolbar-bg: #f8fafc;
+  --agy-toolbar-border: #e2e8f0;
+  --agy-toolbar-btn-bg: #ffffff;
+  --agy-toolbar-btn-border: #cbd5e1;
+  --agy-toolbar-btn-text: #334155;
+  --agy-toolbar-btn-hover: #f1f5f9;
+  --agy-card-bg: #ffffff;
+  --agy-card-border: #e2e8f0;
+  --agy-card-hover-border: #93c5fd;
+  --agy-card-active-bg: #f0f7ff;
+  --agy-card-active-border: #bfdbfe;
+  --agy-card-active-shadow: 0 4px 14px rgba(59, 130, 246, 0.09);
+  --agy-track-bg: #e2e8f0;
+  --agy-footer-bg: #f8fafc;
+  --agy-footer-border: #f1f5f9;
+  --agy-footer-info: #94a3b8;
+  --agy-add-btn-bg: #ffffff;
+  --agy-add-btn-border: #cbd5e1;
+  --agy-add-btn-text: #0f172a;
+  --agy-add-btn-hover: #f1f5f9;
+  --agy-confirm-bg: #ffffff;
+  --agy-confirm-border: #e2e8f0;
+  --agy-confirm-overlay: rgba(15, 23, 42, 0.4);
+  --agy-confirm-cancel-bg: #ffffff;
+  --agy-confirm-cancel-border: #cbd5e1;
+  --agy-confirm-cancel-text: #475569;
+  --agy-info-circle-bg: #e2e8f0;
+  --agy-info-circle-border: #cbd5e1;
+  --agy-info-circle-text: #475569;
+  --agy-info-tooltip-bg: #0f172a;
+  --agy-info-tooltip-text: #f8fafc;
+  --agy-info-tooltip-border: rgba(255, 255, 255, 0.12);
+}
+
+/* Dark Theme Overrides: Synchronized with Antigravity dark theme */
+body.theme-dark #agy-account-switcher-popover,
+body.dark #agy-account-switcher-popover,
+body.vscode-dark #agy-account-switcher-popover {
+  --agy-bg: rgba(26, 27, 34, 0.98);
+  --agy-border: rgba(255, 255, 255, 0.1);
+  --agy-shadow: 0 24px 60px rgba(0, 0, 0, 0.6), 0 4px 16px rgba(0, 0, 0, 0.4);
+  --agy-text-main: #f4f4f5;
+  --agy-text-muted: #a1a1aa;
+  --agy-header-bg: linear-gradient(180deg, #24252f 0%, #1c1d24 100%);
+  --agy-header-border: rgba(255, 255, 255, 0.08);
+  --agy-toolbar-bg: #21222a;
+  --agy-toolbar-border: rgba(255, 255, 255, 0.07);
+  --agy-toolbar-btn-bg: rgba(255, 255, 255, 0.06);
+  --agy-toolbar-btn-border: rgba(255, 255, 255, 0.14);
+  --agy-toolbar-btn-text: #e4e4e7;
+  --agy-toolbar-btn-hover: rgba(255, 255, 255, 0.12);
+  --agy-card-bg: #24252f;
+  --agy-card-border: rgba(255, 255, 255, 0.08);
+  --agy-card-hover-border: rgba(96, 165, 250, 0.4);
+  --agy-card-active-bg: #292b38;
+  --agy-card-active-border: rgba(96, 165, 250, 0.5);
+  --agy-card-active-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+  --agy-track-bg: rgba(255, 255, 255, 0.12);
+  --agy-footer-bg: #1e1f26;
+  --agy-footer-border: rgba(255, 255, 255, 0.08);
+  --agy-footer-info: #71717a;
+  --agy-add-btn-bg: rgba(255, 255, 255, 0.06);
+  --agy-add-btn-border: rgba(255, 255, 255, 0.15);
+  --agy-add-btn-text: #f4f4f5;
+  --agy-add-btn-hover: rgba(255, 255, 255, 0.12);
+  --agy-confirm-bg: #24252f;
+  --agy-confirm-border: rgba(255, 255, 255, 0.12);
+  --agy-confirm-overlay: rgba(0, 0, 0, 0.65);
+  --agy-confirm-cancel-bg: rgba(255, 255, 255, 0.08);
+  --agy-confirm-cancel-border: rgba(255, 255, 255, 0.14);
+  --agy-confirm-cancel-text: #e4e4e7;
+  --agy-info-circle-bg: rgba(255, 255, 255, 0.1);
+  --agy-info-circle-border: rgba(255, 255, 255, 0.16);
+  --agy-info-circle-text: #cbd5e1;
+  --agy-info-tooltip-bg: #141419;
+  --agy-info-tooltip-text: #f4f4f5;
+  --agy-info-tooltip-border: rgba(255, 255, 255, 0.18);
+}
+
+@media (prefers-color-scheme: dark) {
+  body:not(.theme-light) #agy-account-switcher-popover {
+    --agy-bg: rgba(26, 27, 34, 0.98);
+    --agy-border: rgba(255, 255, 255, 0.1);
+    --agy-shadow: 0 24px 60px rgba(0, 0, 0, 0.6), 0 4px 16px rgba(0, 0, 0, 0.4);
+    --agy-text-main: #f4f4f5;
+    --agy-text-muted: #a1a1aa;
+    --agy-header-bg: linear-gradient(180deg, #24252f 0%, #1c1d24 100%);
+    --agy-header-border: rgba(255, 255, 255, 0.08);
+    --agy-toolbar-bg: #21222a;
+    --agy-toolbar-border: rgba(255, 255, 255, 0.07);
+    --agy-toolbar-btn-bg: rgba(255, 255, 255, 0.06);
+    --agy-toolbar-btn-border: rgba(255, 255, 255, 0.14);
+    --agy-toolbar-btn-text: #e4e4e7;
+    --agy-toolbar-btn-hover: rgba(255, 255, 255, 0.12);
+    --agy-card-bg: #24252f;
+    --agy-card-border: rgba(255, 255, 255, 0.08);
+    --agy-card-hover-border: rgba(96, 165, 250, 0.4);
+    --agy-card-active-bg: #292b38;
+    --agy-card-active-border: rgba(96, 165, 250, 0.5);
+    --agy-card-active-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+    --agy-track-bg: rgba(255, 255, 255, 0.12);
+    --agy-footer-bg: #1e1f26;
+    --agy-footer-border: rgba(255, 255, 255, 0.08);
+    --agy-footer-info: #71717a;
+    --agy-add-btn-bg: rgba(255, 255, 255, 0.06);
+    --agy-add-btn-border: rgba(255, 255, 255, 0.15);
+    --agy-add-btn-text: #f4f4f5;
+    --agy-add-btn-hover: rgba(255, 255, 255, 0.12);
+    --agy-confirm-bg: #24252f;
+    --agy-confirm-border: rgba(255, 255, 255, 0.12);
+    --agy-confirm-overlay: rgba(0, 0, 0, 0.65);
+    --agy-confirm-cancel-bg: rgba(255, 255, 255, 0.08);
+    --agy-confirm-cancel-border: rgba(255, 255, 255, 0.14);
+    --agy-confirm-cancel-text: #e4e4e7;
+    --agy-info-circle-bg: rgba(255, 255, 255, 0.1);
+    --agy-info-circle-border: rgba(255, 255, 255, 0.16);
+    --agy-info-circle-text: #cbd5e1;
+    --agy-info-tooltip-bg: #141419;
+    --agy-info-tooltip-text: #f4f4f5;
+    --agy-info-tooltip-border: rgba(255, 255, 255, 0.18);
+  }
+}
+
+/* =========================================================================
+   Popover Container
+   ========================================================================= */
+
 #agy-account-switcher-popover {
   position: fixed;
   bottom: 12px;
-  left: 165px; /* dynamically positioned adjacent to sidebar */
+  left: 165px;
   width: 360px;
   max-height: calc(100vh - 40px);
-  background: rgba(255, 255, 255, 0.98);
+  background: var(--agy-bg);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(226, 232, 240, 0.95);
+  border: 1px solid var(--agy-border);
   border-radius: 18px;
-  box-shadow: 0 20px 48px -10px rgba(15, 23, 42, 0.16), 0 2px 10px rgba(15, 23, 42, 0.05);
-  color: #0f172a;
+  box-shadow: var(--agy-shadow);
+  color: var(--agy-text-main);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   z-index: 999999;
   display: flex;
@@ -142,7 +280,7 @@ button[data-testid="settings-button"] {
   opacity: 0;
   visibility: hidden;
   transform: translateX(-12px) scale(0.96);
-  transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.22s ease;
+  transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.22s ease, background-color 0.2s ease, border-color 0.2s ease;
 }
 
 #agy-account-switcher-popover.open {
@@ -151,14 +289,14 @@ button[data-testid="settings-button"] {
   transform: translateX(0) scale(1);
 }
 
-/* Popover Header (Soft Light) */
+/* Popover Header */
 .agy-popover-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 14px 18px;
-  border-bottom: 1px solid #f1f5f9;
-  background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+  border-bottom: 1px solid var(--agy-header-border);
+  background: var(--agy-header-bg);
 }
 
 .agy-popover-header-left {
@@ -189,21 +327,21 @@ button[data-testid="settings-button"] {
 .agy-popover-header-title {
   font-size: 13.5px;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--agy-text-main);
   letter-spacing: -0.2px;
   line-height: 1.2;
 }
 
 .agy-popover-header-email {
   font-size: 11.5px;
-  color: #64748b;
+  color: var(--agy-text-muted);
   margin-top: 2px;
 }
 
 .agy-popover-close-btn {
   background: transparent;
   border: none;
-  color: #94a3b8;
+  color: var(--agy-text-muted);
   cursor: pointer;
   padding: 5px;
   border-radius: 6px;
@@ -214,27 +352,27 @@ button[data-testid="settings-button"] {
 }
 
 .agy-popover-close-btn:hover {
-  background: #f1f5f9;
-  color: #0f172a;
+  background: var(--agy-toolbar-btn-bg);
+  color: var(--agy-text-main);
 }
 
-/* Toolbar (Soft Light) */
+/* Controls Toolbar */
 .agy-popover-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 10px 18px;
-  background: #f8fafc;
-  border-bottom: 1px solid #e2e8f0;
+  background: var(--agy-toolbar-bg);
+  border-bottom: 1px solid var(--agy-toolbar-border);
 }
 
 .agy-toolbar-refresh-btn {
   display: flex;
   align-items: center;
   gap: 5px;
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
-  color: #334155;
+  background: var(--agy-toolbar-btn-bg);
+  border: 1px solid var(--agy-toolbar-btn-border);
+  color: var(--agy-toolbar-btn-text);
   font-size: 11.5px;
   font-weight: 500;
   padding: 5px 12px;
@@ -245,9 +383,9 @@ button[data-testid="settings-button"] {
 }
 
 .agy-toolbar-refresh-btn:hover {
-  background: #f1f5f9;
-  border-color: #94a3b8;
-  color: #0f172a;
+  background: var(--agy-toolbar-btn-hover);
+  border-color: var(--agy-text-muted);
+  color: var(--agy-text-main);
 }
 
 .agy-toolbar-refresh-btn.spinning svg {
@@ -258,13 +396,20 @@ button[data-testid="settings-button"] {
   100% { transform: rotate(360deg); }
 }
 
+/* Auto-Switch Group with Info Badge */
+.agy-auto-switch-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .agy-auto-switch-toggle {
   display: flex;
   align-items: center;
   gap: 8px;
   font-size: 11.5px;
   font-weight: 500;
-  color: #475569;
+  color: var(--agy-text-muted);
   user-select: none;
   cursor: pointer;
 }
@@ -272,7 +417,7 @@ button[data-testid="settings-button"] {
 .agy-switch-track {
   width: 32px;
   height: 18px;
-  background: #cbd5e1;
+  background: var(--agy-track-bg);
   border-radius: 9px;
   position: relative;
   transition: background 0.2s ease;
@@ -298,7 +443,100 @@ button[data-testid="settings-button"] {
   transform: translateX(14px);
 }
 
-/* Accounts Cards List (Soft Light) */
+/* Circular Info Badge (!) & Floating Tooltip */
+.agy-info-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  outline: none;
+}
+
+.agy-info-badge {
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  border-radius: 50%;
+  font-size: 10.5px;
+  font-weight: 700;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  background: var(--agy-info-circle-bg);
+  border: 1px solid var(--agy-info-circle-border);
+  color: var(--agy-info-circle-text);
+  transition: all 0.18s ease;
+  user-select: none;
+}
+
+.agy-info-wrapper:hover .agy-info-badge,
+.agy-info-wrapper:focus .agy-info-badge {
+  background: #3b82f6;
+  color: #ffffff;
+  border-color: #2563eb;
+  transform: scale(1.1);
+  box-shadow: 0 1px 6px rgba(59, 130, 246, 0.4);
+}
+
+.agy-info-popover {
+  position: absolute;
+  right: -6px;
+  top: calc(100% + 8px);
+  width: 234px;
+  padding: 10px 13px;
+  border-radius: 11px;
+  font-size: 11px;
+  line-height: 1.45;
+  z-index: 100;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-4px);
+  background: var(--agy-info-tooltip-bg);
+  color: var(--agy-info-tooltip-text);
+  border: 1px solid var(--agy-info-tooltip-border);
+  box-shadow: 0 12px 28px -4px rgba(0, 0, 0, 0.45);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  text-align: left;
+}
+
+.agy-info-popover::after {
+  content: "";
+  position: absolute;
+  right: 10px;
+  bottom: 100%;
+  border: 5px solid transparent;
+  border-bottom-color: var(--agy-info-tooltip-bg);
+}
+
+.agy-info-popover-title {
+  font-weight: 700;
+  font-size: 11px;
+  margin-bottom: 4px;
+  color: #60a5fa;
+  letter-spacing: -0.1px;
+}
+
+.agy-info-popover-text {
+  color: var(--agy-info-tooltip-text);
+  opacity: 0.92;
+  font-size: 10.5px;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.agy-info-wrapper:hover .agy-info-popover,
+.agy-info-wrapper:focus-within .agy-info-popover {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* Accounts Cards List */
 .agy-popover-body {
   padding: 12px 16px;
   max-height: 340px;
@@ -309,8 +547,8 @@ button[data-testid="settings-button"] {
 }
 
 .agy-account-card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--agy-card-bg);
+  border: 1px solid var(--agy-card-border);
   border-radius: 12px;
   padding: 12px 14px;
   display: flex;
@@ -321,14 +559,14 @@ button[data-testid="settings-button"] {
 }
 
 .agy-account-card:hover {
-  border-color: #93c5fd;
-  box-shadow: 0 4px 12px -2px rgba(59, 130, 246, 0.08);
+  border-color: var(--agy-card-hover-border);
+  box-shadow: 0 4px 12px -2px rgba(59, 130, 246, 0.1);
 }
 
 .agy-account-card.active {
-  background: #f0f7ff;
-  border-color: #bfdbfe;
-  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.09);
+  background: var(--agy-card-active-bg);
+  border-color: var(--agy-card-active-border);
+  box-shadow: var(--agy-card-active-shadow);
 }
 
 .agy-card-top {
@@ -347,7 +585,7 @@ button[data-testid="settings-button"] {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: #e2e8f0;
+  background: var(--agy-track-bg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -372,7 +610,7 @@ button[data-testid="settings-button"] {
 .agy-card-label {
   font-size: 12.5px;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--agy-text-main);
   display: flex;
   align-items: center;
   gap: 6px;
@@ -389,9 +627,16 @@ button[data-testid="settings-button"] {
   text-transform: uppercase;
 }
 
+body.theme-dark .agy-plan-badge,
+body.dark .agy-plan-badge {
+  background: rgba(124, 58, 237, 0.2);
+  color: #c4b5fd;
+  border-color: rgba(124, 58, 237, 0.35);
+}
+
 .agy-card-email {
   font-size: 11px;
-  color: #64748b;
+  color: var(--agy-text-muted);
   margin-top: 1px;
 }
 
@@ -416,16 +661,37 @@ button[data-testid="settings-button"] {
   border: 1px solid #bbf7d0;
 }
 
+body.theme-dark .agy-status-pill.active,
+body.dark .agy-status-pill.active {
+  background: rgba(34, 197, 94, 0.18);
+  color: #4ade80;
+  border-color: rgba(34, 197, 94, 0.3);
+}
+
 .agy-status-pill.ready {
   background: #e0f2fe;
   color: #0369a1;
   border: 1px solid #bae6fd;
 }
 
+body.theme-dark .agy-status-pill.ready,
+body.dark .agy-status-pill.ready {
+  background: rgba(56, 189, 248, 0.16);
+  color: #38bdf8;
+  border-color: rgba(56, 189, 248, 0.3);
+}
+
 .agy-status-pill.cooldown {
   background: #fef3c7;
   color: #b45309;
   border: 1px solid #fde68a;
+}
+
+body.theme-dark .agy-status-pill.cooldown,
+body.dark .agy-status-pill.cooldown {
+  background: rgba(245, 158, 11, 0.18);
+  color: #fbbf24;
+  border-color: rgba(245, 158, 11, 0.3);
 }
 
 .agy-card-switch-btn {
@@ -447,27 +713,29 @@ button[data-testid="settings-button"] {
 }
 
 .agy-card-switch-btn:disabled {
-  background: #e2e8f0;
-  color: #94a3b8;
+  background: var(--agy-track-bg);
+  color: var(--agy-text-muted);
   cursor: default;
   box-shadow: none;
   transform: none;
+  opacity: 0.65;
 }
 
-/* Dual Quota Metrics: 5-Hour Limit & Weekly Limit (Soft Light) */
+/* Dual Quota Metrics: 5-Hour Limit & Weekly Limit */
 .agy-card-quotas-wrapper {
   display: flex;
   flex-direction: column;
   gap: 7px;
   margin-top: 4px;
   padding-top: 6px;
-  border-top: 1px dashed #e2e8f0;
+  border-top: 1px dashed var(--agy-card-border);
 }
 
 .agy-quota-metric {
   display: flex;
   flex-direction: column;
   gap: 3px;
+  cursor: help;
 }
 
 .agy-quota-metric-header {
@@ -482,12 +750,12 @@ button[data-testid="settings-button"] {
   align-items: center;
   gap: 4px;
   font-weight: 500;
-  color: #475569;
+  color: var(--agy-text-main);
   font-size: 10.5px;
 }
 
 .agy-quota-title svg {
-  color: #64748b;
+  color: var(--agy-text-muted);
   flex-shrink: 0;
 }
 
@@ -506,19 +774,27 @@ button[data-testid="settings-button"] {
 .agy-quota-pct.med { color: #d97706; }
 .agy-quota-pct.low { color: #dc2626; }
 
+body.theme-dark .agy-quota-pct.high,
+body.dark .agy-quota-pct.high { color: #4ade80; }
+body.theme-dark .agy-quota-pct.med,
+body.dark .agy-quota-pct.med { color: #fbbf24; }
+body.theme-dark .agy-quota-pct.low,
+body.dark .agy-quota-pct.low { color: #f87171; }
+
 .agy-quota-sep {
-  color: #cbd5e1;
+  color: var(--agy-text-muted);
+  opacity: 0.5;
   font-size: 9px;
 }
 
 .agy-quota-cd {
-  color: #64748b;
+  color: var(--agy-text-muted);
   font-size: 10px;
 }
 
 .agy-quota-track {
   height: 4.5px;
-  background: #e2e8f0;
+  background: var(--agy-track-bg);
   border-radius: 3px;
   overflow: hidden;
 }
@@ -533,11 +809,11 @@ button[data-testid="settings-button"] {
 .agy-quota-fill.med { background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%); }
 .agy-quota-fill.low { background: linear-gradient(90deg, #ef4444 0%, #f87171 100%); }
 
-/* Popover Footer (Soft Light) */
+/* Popover Footer */
 .agy-popover-footer {
   padding: 10px 16px;
-  border-top: 1px solid #f1f5f9;
-  background: #f8fafc;
+  border-top: 1px solid var(--agy-footer-border);
+  background: var(--agy-footer-bg);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -547,9 +823,9 @@ button[data-testid="settings-button"] {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
-  color: #0f172a;
+  background: var(--agy-add-btn-bg);
+  border: 1px solid var(--agy-add-btn-border);
+  color: var(--agy-add-btn-text);
   font-size: 11.5px;
   font-weight: 600;
   padding: 6px 12px;
@@ -560,20 +836,20 @@ button[data-testid="settings-button"] {
 }
 
 .agy-add-account-btn:hover {
-  background: #f1f5f9;
-  border-color: #94a3b8;
+  background: var(--agy-add-btn-hover);
+  border-color: var(--agy-text-muted);
 }
 
 .agy-footer-info {
   font-size: 10.5px;
-  color: #94a3b8;
+  color: var(--agy-footer-info);
 }
 
-/* Confirmation Dialog (Soft Light Floating Modal) */
+/* Confirmation Dialog (Modal Overlay) */
 #agy-confirm-dialog {
   position: absolute;
   inset: 0;
-  background: rgba(15, 23, 42, 0.4);
+  background: var(--agy-confirm-overlay);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
@@ -583,12 +859,12 @@ button[data-testid="settings-button"] {
 }
 
 .agy-confirm-box {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--agy-confirm-bg);
+  border: 1px solid var(--agy-confirm-border);
   border-radius: 14px;
   padding: 18px;
   width: 100%;
-  box-shadow: 0 12px 28px -6px rgba(15, 23, 42, 0.2);
+  box-shadow: var(--agy-shadow);
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -598,13 +874,13 @@ button[data-testid="settings-button"] {
 .agy-confirm-title {
   font-size: 14px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--agy-text-main);
   margin: 0;
 }
 
 .agy-confirm-text {
   font-size: 12px;
-  color: #475569;
+  color: var(--agy-text-muted);
   line-height: 1.4;
   margin: 0;
 }
@@ -631,9 +907,9 @@ button[data-testid="settings-button"] {
 .agy-confirm-btn:hover { background: #1d4ed8; }
 
 .agy-cancel-btn {
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
-  color: #475569;
+  background: var(--agy-confirm-cancel-bg);
+  border: 1px solid var(--agy-confirm-cancel-border);
+  color: var(--agy-confirm-cancel-text);
   padding: 6px 14px;
   border-radius: 7px;
   font-size: 12px;
@@ -642,4 +918,6 @@ button[data-testid="settings-button"] {
   transition: all 0.15s ease;
 }
 
-.agy-cancel-btn:hover { background: #f1f5f9; }
+.agy-cancel-btn:hover {
+  background: var(--agy-toolbar-btn-hover);
+}

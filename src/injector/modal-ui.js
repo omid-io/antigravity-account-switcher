@@ -135,10 +135,21 @@
           <span>Refresh</span>
         </button>
 
-        <div id="agy-auto-switch-container" class="agy-auto-switch-toggle" title="Auto-switch when active quota exhausts">
-          <span>Auto-Switch</span>
-          <div id="agy-switch-track" class="agy-switch-track">
-            <div class="agy-switch-thumb"></div>
+        <div class="agy-auto-switch-group">
+          <div id="agy-auto-switch-container" class="agy-auto-switch-toggle" title="Toggle Auto-Switch">
+            <span>Auto-Switch</span>
+            <div id="agy-switch-track" class="agy-switch-track">
+              <div class="agy-switch-thumb"></div>
+            </div>
+          </div>
+          <div class="agy-info-wrapper" tabindex="0" role="tooltip" aria-label="Auto-switch information">
+            <span class="agy-info-badge">!</span>
+            <div class="agy-info-popover">
+              <div class="agy-info-popover-title">Auto-Switch Engine</div>
+              <div class="agy-info-popover-text">
+                When enabled, Antigravity automatically switches to the next available account in your vault as soon as active quota is exhausted (rate limit 429), ensuring seamless uninterrupted workflow.
+              </div>
+            </div>
           </div>
         </div>
       </div>
