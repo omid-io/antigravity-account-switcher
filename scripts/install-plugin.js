@@ -24,7 +24,11 @@ function copyDirRecursive(src, dest) {
     if (entry.isDirectory()) {
       copyDirRecursive(srcPath, destPath);
     } else {
-      fs.copyFileSync(srcPath, destPath);
+      try {
+        fs.copyFileSync(srcPath, destPath);
+      } catch (e) {
+        console.warn(`[install] Note: ${entry.name} busy, skipping.`);
+      }
     }
   }
 }
@@ -35,18 +39,11 @@ async function install() {
     fs.mkdirSync(PLUGINS_DIR, { recursive: true });
   }
 
-  // Remove existing installation if present
-  if (fs.existsSync(TARGET_DIR)) {
-    console.log(`Updating existing installation at: ${TARGET_DIR}`);
-    fs.rmSync(TARGET_DIR, { recursive: true, force: true });
-  }
-
-  // Copy files to plugins directory
+  // Copy files in-place without removing directory
   copyDirRecursive(ROOT_DIR, TARGET_DIR);
 
   console.log('✅ Antigravity Account Switcher successfully installed as an official Antigravity plugin!');
   console.log(`Location: ${TARGET_DIR}`);
-  console.log('Restart Antigravity or start the sidecar using: npm start');
 }
 
 install().catch(err => {

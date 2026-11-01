@@ -9,166 +9,197 @@
   const API_BASE = 'http://127.0.0.1:51444';
   let isAutoSwitchActive = false;
   let cachedAccounts = [];
+  let isPopoverOpen = false;
 
   // 1. Inject Styles
   function injectStyles(cssText) {
-    if (document.getElementById('agy-switcher-styles')) return;
-    const style = document.createElement('style');
-    style.id = 'agy-switcher-styles';
+    let style = document.getElementById('agy-switcher-styles');
+    if (!style) {
+      style = document.createElement('style');
+      style.id = 'agy-switcher-styles';
+      document.head.appendChild(style);
+    }
     style.textContent = cssText;
-    document.head.appendChild(style);
   }
 
-  // 2. Inject Sidebar Button
-  function injectSidebarButton() {
-    if (document.getElementById('agy-switcher-sidebar-btn')) return;
-
-    // Find the bottom container holding Settings
+  // 2. Inject Circular Google Pro Avatar Button opposite Settings
+  function injectAvatarTriggerButton() {
     const settingsBtn = Array.from(document.querySelectorAll('button')).find(b => 
-      b.getAttribute('data-testid') === 'settings-button' || b.innerText.trim().includes('Settings')
+      b.getAttribute('data-testid') === 'settings-button' || (b.innerText && b.innerText.trim() === 'Settings')
     );
 
     if (!settingsBtn || !settingsBtn.parentElement) {
-      setTimeout(injectSidebarButton, 1000);
+      setTimeout(injectAvatarTriggerButton, 1000);
       return;
     }
 
-    const container = settingsBtn.parentElement;
+    // Check if already injected
+    if (document.getElementById('agy-avatar-trigger-btn')) return;
 
-    const btn = document.createElement('button');
-    btn.id = 'agy-switcher-sidebar-btn';
-    btn.className = 'agy-switcher-sidebar-btn';
-    btn.title = 'Switch Account & Live Quota';
+    const parent = settingsBtn.parentElement;
 
-    btn.innerHTML = `
-      <span class="shrink-0 flex items-center" style="color:#38bdf8;">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
-          <circle cx="9" cy="7" r="4"></circle>
-          <polyline points="16 11 18 13 22 9"></polyline>
-        </svg>
-      </span>
-      <span class="truncate text-sm" style="font-weight:500;">Accounts</span>
-      <span id="agy-sidebar-quota-pill" class="agy-sidebar-quota-pill">...</span>
+    // Create flex row wrapper to place Settings and Avatar opposite each other
+    let rowWrapper = document.getElementById('agy-settings-row-wrapper');
+    if (!rowWrapper) {
+      rowWrapper = document.createElement('div');
+      rowWrapper.id = 'agy-settings-row-wrapper';
+      rowWrapper.className = 'agy-settings-row-wrapper';
+      parent.insertBefore(rowWrapper, settingsBtn);
+      rowWrapper.appendChild(settingsBtn);
+    }
+
+    // Create Circular Google Pro Avatar Button
+    const avatarBtn = document.createElement('button');
+    avatarBtn.id = 'agy-avatar-trigger-btn';
+    avatarBtn.title = 'Google Account & Live Quotas';
+
+    avatarBtn.innerHTML = `
+      <div class="agy-avatar-inner-ring">
+        <img id="agy-avatar-img" class="agy-avatar-img" src="" alt="Google Profile" style="display:none;" />
+        <div id="agy-avatar-fallback" class="agy-avatar-fallback">G</div>
+      </div>
+      <div id="agy-avatar-quota-dot" class="agy-avatar-quota-dot" title="Live Quota"></div>
     `;
 
-    btn.addEventListener('click', (e) => {
+    avatarBtn.addEventListener('click', (e) => {
       e.preventDefault();
-      openModal();
+      e.stopPropagation();
+      togglePopover();
     });
 
-    // Insert above settings
-    container.insertBefore(btn, settingsBtn);
+    rowWrapper.appendChild(avatarBtn);
   }
 
-  // 3. Inject Modal DOM Structure
-  function injectModalStructure() {
-    if (document.getElementById('agy-account-switcher-overlay')) return;
+  // 3. Inject Flyout Popover Structure
+  function injectPopoverStructure() {
+    if (document.getElementById('agy-account-switcher-popover')) return;
 
-    const overlay = document.createElement('div');
-    overlay.id = 'agy-account-switcher-overlay';
+    const popover = document.createElement('div');
+    popover.id = 'agy-account-switcher-popover';
 
-    overlay.innerHTML = `
-      <div id="agy-account-switcher-modal">
-        <!-- Header -->
-        <div class="agy-modal-header">
-          <div class="agy-modal-title-group">
-            <div class="agy-modal-icon-badge">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
-                <circle cx="9" cy="7" r="4"></circle>
-                <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
-                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-              </svg>
-            </div>
-            <div>
-              <h3 class="agy-modal-title">Antigravity Account Switcher</h3>
-              <div class="agy-modal-subtitle">1-Click Multi-Account & Live Quota Switcher</div>
-            </div>
+    popover.innerHTML = `
+      <!-- Header -->
+      <div class="agy-popover-header">
+        <div class="agy-popover-header-left">
+          <div class="agy-popover-avatar-preview">
+            <img id="agy-header-avatar" src="" alt="Avatar" />
           </div>
-          <button id="agy-modal-close" class="agy-modal-close-btn" title="Close">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-          </button>
-        </div>
-
-        <!-- Controls Toolbar -->
-        <div class="agy-modal-toolbar">
-          <button id="agy-refresh-btn" class="agy-toolbar-refresh-btn">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="23 4 23 10 17 10"></polyline>
-              <polyline points="1 20 1 14 7 14"></polyline>
-              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
-            </svg>
-            <span>Refresh Quotas</span>
-          </button>
-
-          <div id="agy-auto-switch-container" class="agy-auto-switch-toggle">
-            <span>Auto-Switch on Exhaustion</span>
-            <div id="agy-switch-track" class="agy-switch-track">
-              <div class="agy-switch-thumb"></div>
-            </div>
+          <div>
+            <div id="agy-header-title" class="agy-popover-header-title">Google Account</div>
+            <div id="agy-header-email" class="agy-popover-header-email">Loading...</div>
           </div>
         </div>
+        <button id="agy-popover-close" class="agy-popover-close-btn" title="Close">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
 
-        <!-- Accounts List Container -->
-        <div id="agy-accounts-body" class="agy-modal-body">
-          <div style="text-align:center;padding:30px;color:#94a3b8;font-size:13px;">Loading accounts...</div>
+      <!-- Controls Toolbar -->
+      <div class="agy-popover-toolbar">
+        <button id="agy-refresh-btn" class="agy-toolbar-refresh-btn">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <polyline points="1 20 1 14 7 14"></polyline>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+          </svg>
+          <span>Refresh</span>
+        </button>
+
+        <div id="agy-auto-switch-container" class="agy-auto-switch-toggle" title="Auto-switch when active quota exhausts">
+          <span>Auto-Switch</span>
+          <div id="agy-switch-track" class="agy-switch-track">
+            <div class="agy-switch-thumb"></div>
+          </div>
         </div>
+      </div>
 
-        <!-- Footer -->
-        <div class="agy-modal-footer">
-          <button id="agy-add-account-btn" class="agy-add-account-btn">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="12" y1="5" x2="12" y2="19"></line>
-              <line x1="5" y1="12" x2="19" y2="12"></line>
-            </svg>
-            <span>Add Account</span>
-          </button>
-          <div class="agy-footer-info">v1.0.0 · Human-Safe Session Vault</div>
-        </div>
+      <!-- Accounts List Container -->
+      <div id="agy-accounts-body" class="agy-popover-body">
+        <div style="text-align:center;padding:24px;color:#94a3b8;font-size:12px;">Loading accounts...</div>
+      </div>
 
-        <!-- Confirmation Dialog (Hidden initially) -->
-        <div id="agy-confirm-dialog" style="display:none;">
-          <div class="agy-confirm-box">
-            <h4 class="agy-confirm-title">Switch Google Account?</h4>
-            <p id="agy-confirm-text" class="agy-confirm-text">Are you sure you want to switch accounts?</p>
-            <div class="agy-confirm-actions">
-              <button id="agy-confirm-cancel" class="agy-cancel-btn">Cancel</button>
-              <button id="agy-confirm-proceed" class="agy-confirm-btn">Confirm Switch</button>
-            </div>
+      <!-- Footer -->
+      <div class="agy-popover-footer">
+        <button id="agy-add-account-btn" class="agy-add-account-btn">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          <span>Add Account</span>
+        </button>
+        <div class="agy-footer-info">Antigravity Switcher v1.1</div>
+      </div>
+
+      <!-- Confirmation Dialog (Soft Light) -->
+      <div id="agy-confirm-dialog" style="display:none;">
+        <div class="agy-confirm-box">
+          <h4 class="agy-confirm-title">Switch Account?</h4>
+          <p id="agy-confirm-text" class="agy-confirm-text">Switch active Google account?</p>
+          <div class="agy-confirm-actions">
+            <button id="agy-confirm-cancel" class="agy-cancel-btn">Cancel</button>
+            <button id="agy-confirm-proceed" class="agy-confirm-btn">Confirm Switch</button>
           </div>
         </div>
       </div>
     `;
 
-    document.body.appendChild(overlay);
+    document.body.appendChild(popover);
 
     // Event listeners
-    document.getElementById('agy-modal-close').addEventListener('click', closeModal);
-    overlay.addEventListener('click', (e) => {
-      if (e.target === overlay) closeModal();
-    });
-
+    document.getElementById('agy-popover-close').addEventListener('click', closePopover);
     document.getElementById('agy-refresh-btn').addEventListener('click', onRefreshClick);
     document.getElementById('agy-auto-switch-container').addEventListener('click', onToggleAutoSwitch);
     document.getElementById('agy-add-account-btn').addEventListener('click', onAddAccountClick);
+
+    // Click outside to close popover
+    document.addEventListener('click', (e) => {
+      if (!isPopoverOpen) return;
+      const target = e.target;
+      const trigger = document.getElementById('agy-avatar-trigger-btn');
+      if (popover.contains(target) || (trigger && trigger.contains(target))) {
+        return;
+      }
+      closePopover();
+    });
   }
 
-  // 4. Modal Open & Close
-  async function openModal() {
-    const overlay = document.getElementById('agy-account-switcher-overlay');
-    if (!overlay) return;
-    overlay.classList.add('open');
-    // On open, refresh accounts automatically as agreed
+  // 4. Popover Open, Close, Toggle
+  async function togglePopover() {
+    if (isPopoverOpen) {
+      closePopover();
+    } else {
+      await openPopover();
+    }
+  }
+
+  async function openPopover() {
+    const popover = document.getElementById('agy-account-switcher-popover');
+    const trigger = document.getElementById('agy-avatar-trigger-btn');
+    if (!popover) return;
+
+    // Calculate position adjacent to the sidebar
+    if (trigger) {
+      const rect = trigger.getBoundingClientRect();
+      const sidebar = document.querySelector('[role="navigation"][aria-label="Sidebar"]') || trigger.closest('[role="navigation"]');
+      const sidebarRight = sidebar ? sidebar.getBoundingClientRect().right : rect.right;
+      popover.style.left = (sidebarRight + 10) + 'px';
+      popover.style.bottom = Math.max(12, window.innerHeight - rect.bottom - 4) + 'px';
+    }
+
+    popover.classList.add('open');
+    isPopoverOpen = true;
+
+    // Refresh accounts on open
     await fetchAndRenderAccounts(true);
   }
 
-  function closeModal() {
-    const overlay = document.getElementById('agy-account-switcher-overlay');
-    if (overlay) overlay.classList.remove('open');
+  function closePopover() {
+    const popover = document.getElementById('agy-account-switcher-popover');
+    if (popover) popover.classList.remove('open');
+    isPopoverOpen = false;
     hideConfirm();
   }
 
@@ -187,7 +218,7 @@
 
       updateAutoSwitchUI(isAutoSwitchActive);
       renderAccountCards(cachedAccounts);
-      updateSidebarQuotaPill(cachedAccounts);
+      updateTriggerAvatar(cachedAccounts);
     } catch (err) {
       console.error('[agy-switcher] Error loading accounts:', err);
     } finally {
@@ -195,13 +226,35 @@
     }
   }
 
-  function updateSidebarQuotaPill(accounts) {
+  function updateTriggerAvatar(accounts) {
     const active = accounts.find(a => a.isActive);
-    const pill = document.getElementById('agy-sidebar-quota-pill');
-    if (pill && active) {
-      pill.innerText = `${active.remainingPercent}%`;
-      pill.style.color = active.remainingPercent > 50 ? '#34d399' : (active.remainingPercent > 20 ? '#fbbf24' : '#f87171');
-      pill.style.borderColor = active.remainingPercent > 50 ? 'rgba(16, 185, 129, 0.4)' : (active.remainingPercent > 20 ? 'rgba(245, 158, 11, 0.4)' : 'rgba(239, 68, 68, 0.4)');
+    if (!active) return;
+
+    const img = document.getElementById('agy-avatar-img');
+    const fallback = document.getElementById('agy-avatar-fallback');
+    const dot = document.getElementById('agy-avatar-quota-dot');
+    const headerAvatar = document.getElementById('agy-header-avatar');
+    const headerTitle = document.getElementById('agy-header-title');
+    const headerEmail = document.getElementById('agy-header-email');
+
+    if (active.profilePictureUrl && img) {
+      img.src = active.profilePictureUrl;
+      img.style.display = 'block';
+      if (fallback) fallback.style.display = 'none';
+      if (headerAvatar) headerAvatar.src = active.profilePictureUrl;
+    } else if (fallback) {
+      fallback.innerText = (active.name || active.email || 'G').slice(0, 1).toUpperCase();
+      fallback.style.display = 'flex';
+      if (img) img.style.display = 'none';
+    }
+
+    if (headerTitle) headerTitle.innerText = active.name || active.label || 'Active Account';
+    if (headerEmail) headerEmail.innerText = active.email;
+
+    if (dot) {
+      dot.className = 'agy-avatar-quota-dot';
+      if (active.remainingPercent <= 20) dot.classList.add('low');
+      else if (active.remainingPercent <= 50) dot.classList.add('med');
     }
   }
 
@@ -218,19 +271,22 @@
     if (!body) return;
 
     if (!accounts || accounts.length === 0) {
-      body.innerHTML = `<div style="text-align:center;padding:24px;color:#94a3b8;">No profiles registered in vault. Click "Add Account" to onboard.</div>`;
+      body.innerHTML = `<div style="text-align:center;padding:20px;color:#94a3b8;font-size:12px;">No accounts found. Click "Add Account" below.</div>`;
       return;
     }
 
     body.innerHTML = accounts.map(acc => {
       const quotaLevel = acc.remainingPercent > 50 ? 'high' : (acc.remainingPercent > 20 ? 'med' : 'low');
-      const initials = (acc.email || 'A').slice(0, 2).toUpperCase();
+      const initials = (acc.name || acc.email || 'A').slice(0, 1).toUpperCase();
+      const avatarHtml = acc.profilePictureUrl 
+        ? `<img src="${acc.profilePictureUrl}" alt="Avatar" />` 
+        : `<span>${initials}</span>`;
 
       return `
         <div class="agy-account-card ${acc.isActive ? 'active' : ''}">
           <div class="agy-card-top">
             <div class="agy-card-user-info">
-              <div class="agy-card-avatar">${initials}</div>
+              <div class="agy-card-avatar">${avatarHtml}</div>
               <div class="agy-card-names">
                 <div class="agy-card-label">
                   <span>${acc.label}</span>
@@ -250,7 +306,7 @@
 
           <div class="agy-card-quota-row">
             <div class="agy-quota-labels">
-              <span class="agy-quota-percent ${quotaLevel}">${acc.remainingPercent}% Quota Available</span>
+              <span class="agy-quota-percent ${quotaLevel}">${acc.remainingPercent}% Available</span>
               <span class="agy-quota-timer">${acc.resetCountdownText || ''}</span>
             </div>
             <div class="agy-quota-track">
@@ -291,7 +347,7 @@
 
     if (!dialog || !text) return;
 
-    text.innerHTML = `Switch session to <strong>${label}</strong> (<em>${email}</em>)?<br><span style="font-size:11px;color:#94a3b8;display:block;margin-top:6px;">Your active chats, projects and code history will remain 100% safe.</span>`;
+    text.innerHTML = `Switch active Google account to <strong>${label}</strong> (<em>${email}</em>)?<br><span style="font-size:11px;color:#64748b;display:block;margin-top:6px;">All active chats and projects remain safe.</span>`;
     dialog.style.display = 'flex';
 
     cancelBtn.onclick = hideConfirm;
@@ -304,7 +360,6 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id: accId })
         });
-        // The sidecar will trigger soft reload automatically
       } catch (e) {
         alert('Switch failed: ' + e.message);
         hideConfirm();
@@ -324,13 +379,13 @@
 
   async function onAddAccountClick() {
     const btn = document.getElementById('agy-add-account-btn');
-    if (btn) btn.innerHTML = `<span>Preparing Login...</span>`;
+    if (btn) btn.innerHTML = `<span>Opening Login...</span>`;
 
     try {
       const res = await fetch(`${API_BASE}/api/add-account`, { method: 'POST' });
       const data = await res.json();
       if (data.ok) {
-        closeModal();
+        closePopover();
       }
     } catch (err) {
       alert('Failed to initiate login: ' + err.message);
@@ -339,17 +394,18 @@
     }
   }
 
-  // 7. Expose Global Switcher Hook
+  // 7. Global Hook
   window.__AGY_SWITCHER__ = {
     init: function(css) {
       injectStyles(css);
-      injectSidebarButton();
-      injectModalStructure();
+      injectAvatarTriggerButton();
+      injectPopoverStructure();
       fetchAndRenderAccounts(false);
-      setInterval(injectSidebarButton, 2000); // Guard against DOM re-renders
+      setInterval(injectAvatarTriggerButton, 2000); // Guard against DOM re-renders
     },
-    openModal,
-    closeModal,
+    openPopover,
+    closePopover,
+    togglePopover,
     requestSwitch: showConfirm,
     refresh: fetchAndRenderAccounts
   };

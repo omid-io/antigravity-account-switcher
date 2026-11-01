@@ -141,7 +141,7 @@ export function snapshotCurrentSession(label) {
 /**
  * Updates profile metadata (e.g. quota, resetTime, plan).
  */
-export function updateProfileQuota(email, quotaFraction, resetTime, planName) {
+export function updateProfileQuota(email, quotaFraction, resetTime, planName, profilePictureUrl, name) {
   let index = listProfiles();
   let changed = false;
 
@@ -150,6 +150,8 @@ export function updateProfileQuota(email, quotaFraction, resetTime, planName) {
       if (typeof quotaFraction === 'number') p.lastQuota = quotaFraction;
       if (resetTime !== undefined) p.resetTime = resetTime;
       if (planName) p.plan = planName;
+      if (profilePictureUrl) p.profilePictureUrl = profilePictureUrl;
+      if (name) p.name = name;
       p.lastQuotaCheck = new Date().toISOString();
       changed = true;
     }

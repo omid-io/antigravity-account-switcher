@@ -33,9 +33,9 @@ export function calculateResetCountdown(resetTimeIso) {
 }
 
 /**
- * Calls GetUserStatus RPC via CDP to retrieve the live active quota.
+ * Calls GetUserStatus RPC via CDP to retrieve the live active quota and Google profile picture.
  * @param {import('./cdp-bridge.js').CdpBridge} cdp 
- * @returns {Promise<{ email: string, name: string, plan: string, remainingFraction: number, resetTime: string }|null>}
+ * @returns {Promise<{ email: string, name: string, plan: string, profilePictureUrl: string, remainingFraction: number, resetTime: string }|null>}
  */
 export async function fetchActiveQuota(cdp) {
   try {
@@ -61,6 +61,7 @@ export async function fetchActiveQuota(cdp) {
           email: u.email || '',
           name: u.name || '',
           plan: u.planStatus?.planInfo?.planName || 'Pro',
+          profilePictureUrl: u.profilePictureUrl || '',
           remainingFraction: modelWithQuota ? modelWithQuota.quotaInfo.remainingFraction : 1.0,
           resetTime: modelWithQuota ? modelWithQuota.quotaInfo.resetTime : null
         };
@@ -77,7 +78,7 @@ export async function fetchActiveQuota(cdp) {
 
     // Update active profile in vault
     if (result.email) {
-      updateProfileQuota(result.email, result.remainingFraction, result.resetTime, result.plan);
+      updateProfileQuota(result.email, result.remainingFraction, result.resetTime, result.plan, result.profilePictureUrl, result.name);
     }
 
     return result;
@@ -120,6 +121,8 @@ export async function getAllAccountsQuotaSummary(cdp) {
       id: p.id,
       label: p.label,
       email: p.email,
+      name: p.name || '',
+      profilePictureUrl: p.profilePictureUrl || '',
       plan: p.plan || 'Pro',
       isActive: !!p.isActive,
       remainingFraction: fraction,
