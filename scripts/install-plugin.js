@@ -6,13 +6,32 @@ import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const ROOT_DIR = path.resolve(__dirname, '..');
+export const ROOT_DIR = path.resolve(__dirname, '..');
 
-const PLUGIN_NAME = 'antigravity-account-switcher';
-const PLUGINS_DIR = path.join(os.homedir(), '.gemini', 'config', 'plugins');
-const TARGET_DIR = path.join(PLUGINS_DIR, PLUGIN_NAME);
+export const PLUGIN_NAME = 'antigravity-account-switcher';
+export const PLUGINS_DIR = path.join(os.homedir(), '.gemini', 'config', 'plugins');
+export const TARGET_DIR = path.join(PLUGINS_DIR, PLUGIN_NAME);
 
-function copyDirRecursive(src, dest) {
+/**
+ * Returns installed version of the plugin if present.
+ */
+export function getInstalledVersion() {
+  const pkgPath = path.join(TARGET_DIR, 'package.json');
+  if (fs.existsSync(pkgPath)) {
+    try {
+      const data = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+      return data.version || null;
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
+/**
+ * Copies directory recursively skipping non-essential directories.
+ */
+export function copyDirRecursive(src, dest) {
   if (!fs.existsSync(dest)) {
     fs.mkdirSync(dest, { recursive: true });
   }
@@ -28,20 +47,23 @@ function copyDirRecursive(src, dest) {
       try {
         fs.copyFileSync(srcPath, destPath);
       } catch (e) {
-        console.warn(`[install] Note: ${entry.name} busy, skipping.`);
+        // file might be locked or busy
       }
     }
   }
 }
 
-async function triggerLiveReload() {
+/**
+ * Injects latest CSS and JS directly into live Antigravity desktop window via CDP.
+ */
+export async function triggerLiveReload() {
   try {
     const portFile = path.join(process.env.APPDATA || '', 'Antigravity', 'DevToolsActivePort');
-    if (!fs.existsSync(portFile)) return;
+    if (!fs.existsSync(portFile)) return false;
 
     const [portStr] = fs.readFileSync(portFile, 'utf8').trim().split('\n');
     const port = parseInt(portStr, 10);
-    if (!port) return;
+    if (!port) return false;
 
     const targets = await new Promise((resolve) => {
       http.get(`http://127.0.0.1:${port}/json`, (res) => {
@@ -54,11 +76,11 @@ async function triggerLiveReload() {
     });
 
     const page = targets.find(t => t.type === 'page' || (t.url && t.url.includes('workbench.html')));
-    if (!page || !page.webSocketDebuggerUrl) return;
+    if (!page || !page.webSocketDebuggerUrl) return false;
 
     const cssPath = path.join(TARGET_DIR, 'src', 'injector', 'modal.css');
     const jsPath = path.join(TARGET_DIR, 'src', 'injector', 'modal-ui.js');
-    if (!fs.existsSync(cssPath) || !fs.existsSync(jsPath)) return;
+    if (!fs.existsSync(cssPath) || !fs.existsSync(jsPath)) return false;
 
     const css = fs.readFileSync(cssPath, 'utf8');
     const js = fs.readFileSync(jsPath, 'utf8');
@@ -82,7 +104,7 @@ async function triggerLiveReload() {
       });
     }
 
-    // Hot-reload DOM in user window
+    // Clean old DOM nodes
     await send('Runtime.evaluate', {
       expression: `(() => {
         const p = document.getElementById('agy-account-switcher-popover');
@@ -94,33 +116,44 @@ async function triggerLiveReload() {
       })()`
     });
 
+    // Re-inject and initialize
     await send('Runtime.evaluate', { expression: js });
     await send('Runtime.evaluate', { expression: `window.__AGY_SWITCHER__.init(${JSON.stringify(css)});` });
 
     ws.close();
-    console.log('⚡ Live hot-reload triggered directly in Antigravity window!');
+    return true;
   } catch (err) {
-    console.warn('[install] Live reload skipped:', err.message);
+    return false;
   }
 }
 
-async function install() {
-  console.log(`Installing ${PLUGIN_NAME} into Antigravity plugins directory...`);
+/**
+ * Copies plugin files into official plugin directory and triggers live reload.
+ */
+export async function install({ silent = false } = {}) {
   if (!fs.existsSync(PLUGINS_DIR)) {
     fs.mkdirSync(PLUGINS_DIR, { recursive: true });
   }
 
-  // Copy files in-place without removing directory
   copyDirRecursive(ROOT_DIR, TARGET_DIR);
 
-  console.log('✅ Antigravity Account Switcher successfully installed as an official Antigravity plugin!');
-  console.log(`Location: ${TARGET_DIR}`);
-
-  // Automatically push live update to user window
-  await triggerLiveReload();
+  const reloaded = await triggerLiveReload();
+  if (!silent) {
+    if (reloaded) {
+      console.log('⚡ Live hot-reload triggered directly in Antigravity window!');
+    }
+  }
+  return true;
 }
 
-install().catch(err => {
-  console.error('Install failed:', err.message);
-  process.exit(1);
-});
+// Auto-run if executed directly as main script
+const isMain = process.argv[1] && (path.resolve(process.argv[1]) === __filename || path.resolve(process.argv[1]) === path.resolve(__dirname, 'install-plugin.js'));
+if (isMain) {
+  install().then(() => {
+    console.log(`✅ ${PLUGIN_NAME} installed successfully.`);
+    process.exit(0);
+  }).catch(err => {
+    console.error('Install failed:', err.message);
+    process.exit(1);
+  });
+}

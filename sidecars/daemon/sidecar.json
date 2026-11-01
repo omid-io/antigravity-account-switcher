@@ -1,0 +1,8 @@
+{
+  "command": "node",
+  "args": ["main.mjs"],
+  "restart_policy": "always",
+  "display_name": "Antigravity Account Switcher Sidecar",
+  "description": "Background quota watcher and multi-account session manager.",
+  "has_web_ui": false
+}

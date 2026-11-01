@@ -96,7 +96,7 @@ export async function checkForUpdates(forceRefresh = false) {
     latestVersion,
     releaseUrl,
     releaseNotes,
-    updateCommand: `npx ${NPM_PACKAGE}@latest update`,
+    updateCommand: `npx ${NPM_PACKAGE}`,
     repoUrl: `https://github.com/${GITHUB_REPO}`,
     checkedAt: new Date().toISOString()
   };

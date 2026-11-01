@@ -4,34 +4,67 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { listProfiles, switchProfile, snapshotCurrentSession } from '../src/sidecar/vault-manager.js';
 import { getAllAccountsQuotaSummary } from '../src/sidecar/quota-poller.js';
-import { checkForUpdates } from '../src/sidecar/update-checker.js';
+import { checkForUpdates, compareSemver, getCurrentVersion } from '../src/sidecar/update-checker.js';
+import { install, triggerLiveReload, getInstalledVersion } from '../scripts/install-plugin.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const args = process.argv.slice(2);
-const command = args[0] || 'help';
+const command = args[0];
+
+/**
+ * Zero-config smart runner (inspired by Antigravity UI standard):
+ * - If not installed -> installs automatically and hot-reloads Antigravity.
+ * - If installed & outdated -> updates automatically and hot-reloads Antigravity.
+ * - If installed & up-to-date -> refreshes the live UI and confirms status.
+ */
+async function dispatchSmart() {
+  const currentCliVer = getCurrentVersion();
+  const installedVer = getInstalledVersion();
+
+  console.log(`\n🪐 Antigravity Account Switcher (v${currentCliVer})`);
+  console.log('──────────────────────────────────────────────────');
+
+  if (!installedVer) {
+    console.log('📦 Plugin is not installed yet. Installing into Antigravity...');
+    await install();
+    console.log(`\n✅ Installed successfully (v${currentCliVer})!`);
+    console.log('💡 Open Antigravity to see your new Account Switcher in the sidebar.\n');
+    process.exit(0);
+  }
+
+  const comparison = compareSemver(currentCliVer, installedVer);
+  if (comparison > 0) {
+    console.log(`⚡ Updating plugin: v${installedVer} ➔ v${currentCliVer}...`);
+    await install();
+    console.log(`\n🎉 Successfully updated to v${currentCliVer}!`);
+    console.log('⚡ Live hot-reload triggered directly in Antigravity.\n');
+    process.exit(0);
+  }
+
+  console.log(`✅ Already up-to-date (v${installedVer}).`);
+  console.log('⚡ Refreshing live plugin in Antigravity window...');
+  const reloaded = await triggerLiveReload();
+  if (reloaded) {
+    console.log('✨ Live hot-reload applied to active Antigravity window.');
+  }
+  console.log('🚀 Everything is ready and active!\n');
+  process.exit(0);
+}
 
 async function run() {
+  // If no subcommand is passed, or if user explicitly runs 'run', 'install', or 'update'
+  if (!command || command === 'run' || command === 'install' || command === 'update') {
+    await dispatchSmart();
+    return;
+  }
+
   switch (command) {
     case 'start':
       console.log('🚀 Starting Antigravity Account Switcher Sidecar...');
       await import('../src/sidecar/index.js');
       break;
-
-    case 'install': {
-      console.log('📦 Installing Antigravity Account Switcher as native plugin...');
-      await import('../scripts/install-plugin.js');
-      break;
-    }
-
-    case 'update': {
-      console.log('⚡ Updating Antigravity Account Switcher to latest version...');
-      await import('../scripts/install-plugin.js');
-      console.log('✅ Update applied successfully! Live hot-reload triggered.');
-      process.exit(0);
-      break;
-    }
 
     case 'uninstall': {
       console.log('🗑️ Uninstalling Antigravity Account Switcher plugin...');
@@ -137,9 +170,10 @@ async function run() {
       console.log(`
 Antigravity Account Switcher CLI
 
-Usage:
-  npx antigravity-account-switcher install       Install plugin into Antigravity
-  npx antigravity-account-switcher update        Update plugin & hot-reload running app
+Zero-Config Usage:
+  npx antigravity-account-switcher          Smart action (installs, updates, or refreshes)
+
+Subcommands:
   npx antigravity-account-switcher status        Check daemon status & quota updates
   npx antigravity-account-switcher check-update  Check if newer version exists
   npx antigravity-account-switcher list          Display registered accounts and quotas
@@ -152,6 +186,6 @@ Usage:
 }
 
 run().catch(err => {
-  console.error('Error:', err.message);
+  console.error('Error running CLI:', err.message);
   process.exit(1);
 });
