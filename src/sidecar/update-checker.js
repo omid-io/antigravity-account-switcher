@@ -61,24 +61,21 @@ export async function checkForUpdates(forceRefresh = false) {
   let releaseNotes = '';
   let releaseUrl = `https://github.com/${GITHUB_REPO}`;
 
-  // 1. Try GitHub Releases API first
+  // 1. Query npm registry directly (Official, instant, zero rate-limit)
   try {
-    const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/releases/latest`, {
-      headers: {
-        'User-Agent': 'antigravity-account-switcher',
-        'Accept': 'application/vnd.github.v3+json'
-      }
+    const npmRes = await fetch(`https://registry.npmjs.org/${NPM_PACKAGE}/latest`, {
+      headers: { 'Accept': 'application/json' }
     });
-
-    if (res.ok) {
-      const data = await res.json();
-      if (data.tag_name) {
-        latestVersion = data.tag_name.replace(/^v/, '');
-        releaseNotes = data.body || '';
-        releaseUrl = data.html_url || releaseUrl;
+    if (npmRes.ok) {
+      const npmData = await npmRes.json();
+      if (npmData.version) {
+        latestVersion = npmData.version;
+        releaseUrl = `https://www.npmjs.com/package/${NPM_PACKAGE}`;
       }
-    } else {
-      // Fallback: Check raw package.json on master
+    }
+  } catch (err) {
+    // 2. Fallback: Check GitHub if npm registry is unreachable
+    try {
       const rawRes = await fetch(`https://raw.githubusercontent.com/${GITHUB_REPO}/master/package.json`, {
         headers: { 'User-Agent': 'antigravity-account-switcher' }
       });
@@ -86,17 +83,6 @@ export async function checkForUpdates(forceRefresh = false) {
         const rawPkg = await rawRes.json();
         if (rawPkg.version) {
           latestVersion = rawPkg.version;
-        }
-      }
-    }
-  } catch (err) {
-    // 2. Fallback: Try npm registry
-    try {
-      const npmRes = await fetch(`https://registry.npmjs.org/${NPM_PACKAGE}/latest`);
-      if (npmRes.ok) {
-        const npmData = await npmRes.json();
-        if (npmData.version) {
-          latestVersion = npmData.version;
         }
       }
     } catch {}
