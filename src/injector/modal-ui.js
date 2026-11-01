@@ -3,7 +3,7 @@
  * Injected into the Antigravity desktop renderer window.
  */
 (function() {
-  if (window.__AGY_SWITCHER_LOADED__) return;
+  // Allow hot updates when re-injected
   window.__AGY_SWITCHER_LOADED__ = true;
 
   const API_BASE = 'http://127.0.0.1:51444';
@@ -296,7 +296,12 @@
     }
 
     body.innerHTML = accounts.map(acc => {
-      const quotaLevel = acc.remainingPercent > 50 ? 'high' : (acc.remainingPercent > 20 ? 'med' : 'low');
+      const fiveHourPct = typeof acc.fiveHourPercent === 'number' ? acc.fiveHourPercent : (acc.remainingPercent || 100);
+      const fiveHourLevel = fiveHourPct > 50 ? 'high' : (fiveHourPct > 20 ? 'med' : 'low');
+
+      const weeklyPct = typeof acc.weeklyPercent === 'number' ? acc.weeklyPercent : 100;
+      const weeklyLevel = weeklyPct > 50 ? 'high' : (weeklyPct > 20 ? 'med' : 'low');
+
       const initials = (acc.name || acc.email || 'A').slice(0, 1).toUpperCase();
       const avatarHtml = acc.profilePictureUrl 
         ? `<img src="${acc.profilePictureUrl}" alt="Avatar" />` 
@@ -324,13 +329,50 @@
             </div>
           </div>
 
-          <div class="agy-card-quota-row">
-            <div class="agy-quota-labels">
-              <span class="agy-quota-percent ${quotaLevel}">${acc.remainingPercent}% Available</span>
-              <span class="agy-quota-timer">${acc.resetCountdownText || ''}</span>
+          <!-- Dual Quotas: 5-Hour Limit & Weekly Limit -->
+          <div class="agy-card-quotas-wrapper">
+            <!-- 5-Hour Limit -->
+            <div class="agy-quota-metric">
+              <div class="agy-quota-metric-header">
+                <div class="agy-quota-title">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                  </svg>
+                  <span>5-Hour Limit</span>
+                </div>
+                <div class="agy-quota-meta">
+                  <span class="agy-quota-pct ${fiveHourLevel}">${fiveHourPct}%</span>
+                  <span class="agy-quota-sep">•</span>
+                  <span class="agy-quota-cd">${acc.fiveHourCountdownText || acc.resetCountdownText || 'Ready'}</span>
+                </div>
+              </div>
+              <div class="agy-quota-track">
+                <div class="agy-quota-fill ${fiveHourLevel}" style="width: ${fiveHourPct}%;"></div>
+              </div>
             </div>
-            <div class="agy-quota-track">
-              <div class="agy-quota-fill ${quotaLevel}" style="width: ${acc.remainingPercent}%;"></div>
+
+            <!-- Weekly Limit -->
+            <div class="agy-quota-metric">
+              <div class="agy-quota-metric-header">
+                <div class="agy-quota-title">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                  </svg>
+                  <span>Weekly Limit</span>
+                </div>
+                <div class="agy-quota-meta">
+                  <span class="agy-quota-pct ${weeklyLevel}">${weeklyPct}%</span>
+                  <span class="agy-quota-sep">•</span>
+                  <span class="agy-quota-cd">${acc.weeklyCountdownText || 'Active Pool'}</span>
+                </div>
+              </div>
+              <div class="agy-quota-track">
+                <div class="agy-quota-fill ${weeklyLevel}" style="width: ${weeklyPct}%;"></div>
+              </div>
             </div>
           </div>
         </div>

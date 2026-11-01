@@ -15,6 +15,7 @@ profiles/
 *.session
 
 # OS & Temp Files
+.test-artifacts/
 .DS_Store
 Thumbs.db
 *.tmp

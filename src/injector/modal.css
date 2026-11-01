@@ -454,35 +454,70 @@ button[data-testid="settings-button"] {
   transform: none;
 }
 
-/* Quota Progress Bar (Soft Light) */
-.agy-card-quota-row {
+/* Dual Quota Metrics: 5-Hour Limit & Weekly Limit (Soft Light) */
+.agy-card-quotas-wrapper {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 7px;
+  margin-top: 4px;
+  padding-top: 6px;
+  border-top: 1px dashed #e2e8f0;
 }
 
-.agy-quota-labels {
+.agy-quota-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.agy-quota-metric-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   font-size: 11px;
 }
 
-.agy-quota-percent {
-  font-weight: 600;
-}
-
-.agy-quota-percent.high { color: #16a34a; }
-.agy-quota-percent.med { color: #d97706; }
-.agy-quota-percent.low { color: #dc2626; }
-
-.agy-quota-timer {
-  color: #64748b;
+.agy-quota-title {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 500;
+  color: #475569;
   font-size: 10.5px;
 }
 
+.agy-quota-title svg {
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+.agy-quota-meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10.5px;
+}
+
+.agy-quota-pct {
+  font-weight: 600;
+}
+
+.agy-quota-pct.high { color: #16a34a; }
+.agy-quota-pct.med { color: #d97706; }
+.agy-quota-pct.low { color: #dc2626; }
+
+.agy-quota-sep {
+  color: #cbd5e1;
+  font-size: 9px;
+}
+
+.agy-quota-cd {
+  color: #64748b;
+  font-size: 10px;
+}
+
 .agy-quota-track {
-  height: 5px;
+  height: 4.5px;
   background: #e2e8f0;
   border-radius: 3px;
   overflow: hidden;
