@@ -15,6 +15,7 @@ profiles/
 *.session
 
 # OS & Temp Files
+preview/
 .test-artifacts/
 scratch/
 %USERPROFILE%/
