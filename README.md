@@ -24,6 +24,11 @@
 
 **Antigravity Account Switcher** is a Windows-focused account manager for Google Antigravity Desktop. It adds an in-app account panel, keeps local snapshots of the Google sessions you choose to save, and lets you switch the active account without juggling separate launcher windows.
 
+<div align="center">
+  <img src="assets/demo-modal.webp" alt="Antigravity Account Switcher - In-App Glassmorphic Modal & Quota Dashboard" width="100%" />
+  <p><em>In-app glassmorphic modal with real-time quota telemetry, countdown timers, and 1-click account swap.</em></p>
+</div>
+
 A lightweight Node.js sidecar connects to the Antigravity renderer through the Chrome DevTools Protocol (CDP). It coordinates the local account vault, reads quota information exposed by Antigravity's local Language Server, and can optionally react to quota-exhaustion signals.
 
 > [!IMPORTANT]
@@ -100,6 +105,14 @@ npm run uninstall-plugin
 ```
 
 ## Using the switcher
+
+### Native Sidebar Placement
+
+The switcher injects directly into Antigravity's activity bar right above the **Settings** gear icon. It gives you immediate 1-click access to all saved sessions without cluttering your code editor or switching away from your active workspace:
+
+<div align="center">
+  <img src="assets/demo-sidebar.webp" alt="Native Sidebar Placement opposite Settings" width="80%" />
+</div>
 
 1. Open Antigravity and locate the account-switcher control in the sidebar area.
 2. Open the panel to review the active account and saved profiles. Use **Refresh** to request an updated quota snapshot.
