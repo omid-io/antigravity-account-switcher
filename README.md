@@ -1,6 +1,8 @@
-# 🌌 Antigravity Account Switcher
-
 <div align="center">
+
+<img src="assets/banner.webp" alt="Antigravity Account Switcher Banner" width="100%">
+
+# 🌌 Antigravity Account Switcher
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D18.0.0-green.svg)](https://nodejs.org/)
