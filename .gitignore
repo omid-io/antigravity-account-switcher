@@ -16,6 +16,8 @@ profiles/
 
 # OS & Temp Files
 .test-artifacts/
+scratch/
+%USERPROFILE%/
 .DS_Store
 Thumbs.db
 *.tmp

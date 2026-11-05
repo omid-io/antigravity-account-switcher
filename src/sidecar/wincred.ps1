@@ -78,8 +78,19 @@ public class WinCred {
 }
 "@
 
+$DllPath = Join-Path $PSScriptRoot "WinCred.dll"
+
 if (-not ([System.Management.Automation.PSTypeName]'WinCred').Type) {
-    Add-Type -TypeDefinition $TypeDefinition -ErrorAction SilentlyContinue
+    if (Test-Path $DllPath) {
+        Add-Type -Path $DllPath -ErrorAction SilentlyContinue
+    } else {
+        try {
+            Add-Type -TypeDefinition $TypeDefinition -OutputAssembly $DllPath -OutputType Library -ErrorAction Stop
+            Add-Type -Path $DllPath -ErrorAction SilentlyContinue
+        } catch {
+            Add-Type -TypeDefinition $TypeDefinition -ErrorAction SilentlyContinue
+        }
+    }
 }
 
 switch ($Action) {

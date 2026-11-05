@@ -56,7 +56,6 @@
     const container = settingsBtn.parentElement;
     container.style.position = 'relative';
 
-    // If avatar button is already securely mounted inside the container, check badge structure
     const existingAvatar = document.getElementById('agy-avatar-trigger-btn');
     if (existingAvatar && existingAvatar.parentElement === container) {
       if (!existingAvatar.querySelector('.agy-avatar-badge')) {
@@ -97,7 +96,7 @@
     container.appendChild(avatarBtn);
   }
 
-  // 4. Inject Flyout Popover Structure (Soft Light)
+  // 4. Inject Flyout Popover Structure (Unified Header, Soft Light)
   function injectPopoverStructure() {
     const existingPopover = document.getElementById('agy-account-switcher-popover');
     if (existingPopover) {
@@ -116,90 +115,102 @@
     popover.id = 'agy-account-switcher-popover';
 
     popover.innerHTML = `
-      <!-- Header -->
+      <!-- Header: Command Deck Bar -->
       <div class="agy-popover-header">
-        <div class="agy-popover-header-left">
-          <div class="agy-popover-avatar-preview">
-            <img id="agy-header-avatar" src="" alt="Avatar" />
+        <div class="agy-popover-header-brand">
+          <div class="agy-engine-icon-badge" title="Antigravity Account Switcher">
+            <svg class="agy-brand-svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M17 11l4-4-4-4"></path>
+              <path d="M21 7h-5"></path>
+              <path d="M19 15l-4 4 4 4"></path>
+              <path d="M15 19h5"></path>
+            </svg>
           </div>
-          <div>
-            <div id="agy-header-title" class="agy-popover-header-title">Google Account</div>
-            <div id="agy-header-email" class="agy-popover-header-email">Loading...</div>
-          </div>
-        </div>
-        <button id="agy-popover-close" class="agy-popover-close-btn" title="Close" onclick="window.__AGY_SWITCHER__?.closePopover()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        </button>
-      </div>
-
-      <!-- Controls Toolbar -->
-      <div class="agy-popover-toolbar">
-        <button id="agy-refresh-btn" class="agy-toolbar-refresh-btn">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-            <polyline points="23 4 23 10 17 10"></polyline>
-            <polyline points="1 20 1 14 7 14"></polyline>
-            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
-          </svg>
-          <span>Refresh</span>
-        </button>
-
-        <div class="agy-auto-switch-group">
-          <div id="agy-auto-switch-container" class="agy-auto-switch-toggle" title="Toggle Auto-Switch">
-            <span>Auto-Switch</span>
-            <div id="agy-switch-track" class="agy-switch-track">
-              <div class="agy-switch-thumb"></div>
-            </div>
-          </div>
-          <div class="agy-info-wrapper" tabindex="0" role="tooltip" aria-label="Auto-switch information">
-            <span class="agy-info-badge">!</span>
-            <div class="agy-info-popover">
-              <div class="agy-info-popover-header">
-                <span class="agy-info-pill">
-                  <span class="agy-info-dot"></span>
-                  Auto-Switch
-                </span>
-                <span class="agy-info-tag">HTTP 429</span>
+          <div class="agy-header-title-cluster">
+            <div class="agy-header-title-row">
+              <span class="agy-brand-title">Account Switcher</span>
+              <a id="agy-version-tag" class="agy-version-tag" href="https://github.com/omid-io/antigravity-account-switcher" target="_blank" rel="noopener noreferrer" title="View on GitHub">v1.2.2</a>
+              <div id="agy-update-pill" class="agy-update-pill" style="display:none;" title="Click to view update details">
+                <span class="agy-update-dot"></span>
+                <span id="agy-update-text">Update</span>
               </div>
-              <p class="agy-info-popover-text">
-                Automatically rotates to the next healthy account in your vault as soon as active quota is exhausted, ensuring a seamless uninterrupted workflow.
-              </p>
             </div>
           </div>
         </div>
+
+        <div class="agy-header-actions">
+          <!-- Refresh Button (Ghost style) -->
+          <button id="agy-refresh-btn" class="agy-ghost-btn" title="Refresh Live Quotas">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="23 4 23 10 17 10"></polyline>
+              <polyline points="1 20 1 14 7 14"></polyline>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+            </svg>
+          </button>
+
+          <!-- Close Button (Ghost style) -->
+          <button id="agy-popover-close" class="agy-ghost-btn close" title="Close" onclick="window.__AGY_SWITCHER__?.closePopover()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
       </div>
 
-      <!-- Accounts List Container -->
+      <!-- Accounts List Container (Directly under Header) -->
       <div id="agy-accounts-body" class="agy-popover-body">
-        <div style="text-align:center;padding:24px;color:#94a3b8;font-size:12px;">Loading accounts...</div>
+        <div style="text-align:center;padding:24px;color:var(--agy-text-muted);font-size:12px;">Loading accounts...</div>
       </div>
 
-      <!-- Footer -->
+      <!-- Footer: Tactical Control Dock -->
       <div class="agy-popover-footer">
-        <button id="agy-add-account-btn" class="agy-add-account-btn">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-            <line x1="12" y1="5" x2="12" y2="19"></line>
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-          </svg>
+        <button id="agy-add-account-btn" class="agy-add-account-btn" title="Link new Google account">
+          <div class="agy-btn-icon-plus">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+          </div>
           <span>Add Account</span>
         </button>
 
-        <div class="agy-footer-right">
-          <!-- Update Available Badge (Hidden by default, shown if update found) -->
-          <div id="agy-update-pill" class="agy-update-pill" style="display:none;" title="Click to view update details">
-            <span class="agy-update-dot"></span>
-            <span id="agy-update-text">Update</span>
-          </div>
+        <div class="agy-footer-dock-cluster">
+          <div class="agy-dock-divider"></div>
 
-          <!-- App Version & GitHub Link -->
-          <a id="agy-github-link" class="agy-footer-github" href="https://github.com/omid-io/antigravity-account-switcher" target="_blank" rel="noopener noreferrer" title="View Source & Star on GitHub">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
-            </svg>
-            <span class="agy-footer-info">v1.2.0</span>
-          </a>
+          <div class="agy-footer-auto-switch" title="Auto-switch to standby account when quota exhausted (HTTP 429)">
+            <label for="agy-auto-switch-container" class="agy-auto-switch-label" style="cursor:pointer;" onclick="document.getElementById('agy-auto-switch-container')?.click()">Auto-Switch</label>
+
+            <div class="agy-info-wrapper" tabindex="0" role="tooltip" aria-label="Auto-switch information">
+              <span class="agy-info-badge" title="Auto-Switch Information">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="16" x2="12" y2="12"></line>
+                  <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+              </span>
+              <div class="agy-info-popover">
+                <div class="agy-info-popover-header">
+                  <span class="agy-info-pill">
+                    <span class="agy-info-dot"></span>
+                    Auto-Switch
+                  </span>
+                  <span class="agy-info-tag">HTTP 429</span>
+                </div>
+                <p class="agy-info-popover-text">
+                  Automatically rotates to the next available account in your vault as soon as active quota is exhausted, ensuring a seamless uninterrupted workflow.
+                </p>
+              </div>
+            </div>
+
+            <button type="button" role="switch" id="agy-auto-switch-container" class="agy-auto-switch-toggle" aria-checked="false" title="Toggle Auto-Switch on quota exhaustion" style="background:none;border:none;padding:0;cursor:pointer;">
+              <div id="agy-switch-track" class="agy-switch-track">
+                <div class="agy-switch-thumb"></div>
+              </div>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -211,7 +222,7 @@
               <span class="agy-update-badge-icon">🚀</span>
               <span>New Update Available</span>
             </div>
-            <button id="agy-update-close" class="agy-popover-close-btn" title="Close">&times;</button>
+            <button id="agy-update-close" class="agy-ghost-btn close" title="Close">&times;</button>
           </div>
           <div class="agy-update-body">
             <div class="agy-update-version-row">
@@ -236,7 +247,7 @@
         </div>
       </div>
 
-      <!-- Confirmation Dialog (Soft Light) -->
+      <!-- Confirmation Dialog: Switch Account -->
       <div id="agy-confirm-dialog" style="display:none;">
         <div class="agy-confirm-box">
           <h4 class="agy-confirm-title">Switch Account?</h4>
@@ -247,21 +258,35 @@
           </div>
         </div>
       </div>
+
+      <!-- Delete Dialog -->
+      <div id="agy-delete-dialog" style="display:none;">
+        <div class="agy-confirm-box">
+          <h4 class="agy-confirm-title">Remove Account?</h4>
+          <p id="agy-delete-text" class="agy-confirm-text">Remove this account from vault?</p>
+          <div class="agy-confirm-actions">
+            <button id="agy-delete-cancel" class="agy-cancel-btn">Cancel</button>
+            <button id="agy-delete-proceed" class="agy-confirm-btn danger">Remove</button>
+          </div>
+        </div>
+      </div>
     `;
 
     document.body.appendChild(popover);
 
     // Event listeners
-    const closeBtn = document.getElementById('agy-popover-close');
-    if (closeBtn) {
-      closeBtn.onclick = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        closePopover();
-      };
-    }
+    document.getElementById('agy-popover-close')?.addEventListener('click', closePopover);
     document.getElementById('agy-refresh-btn')?.addEventListener('click', onRefreshClick);
-    document.getElementById('agy-auto-switch-container')?.addEventListener('click', onToggleAutoSwitch);
+    const autoSwitchEl = document.getElementById('agy-auto-switch-container');
+    if (autoSwitchEl) {
+      autoSwitchEl.addEventListener('click', onToggleAutoSwitch);
+      autoSwitchEl.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onToggleAutoSwitch();
+        }
+      });
+    }
     document.getElementById('agy-add-account-btn')?.addEventListener('click', onAddAccountClick);
     document.getElementById('agy-update-pill')?.addEventListener('click', showUpdateDialog);
     document.getElementById('agy-update-close')?.addEventListener('click', hideUpdateDialog);
@@ -269,35 +294,63 @@
     document.getElementById('agy-copy-inline-btn')?.addEventListener('click', copyUpdateCommand);
     document.getElementById('agy-update-github-btn')?.addEventListener('click', openUpdateGitHub);
 
-    // Click outside to close popover
-    document.addEventListener('click', (e) => {
-      const popoverEl = document.getElementById('agy-account-switcher-popover');
-      const isOpen = popoverEl ? popoverEl.classList.contains('open') : isPopoverOpen;
-      if (!isOpen) return;
-      const target = e.target;
-      const trigger = document.getElementById('agy-avatar-trigger-btn');
-      if ((popoverEl && popoverEl.contains(target)) || (trigger && trigger.contains(target))) {
-        return;
-      }
-      closePopover();
-    });
+    // Bulletproof click-outside & escape listeners (Capture Phase to bypass VS Code stopPropagation)
+    if (window.__AGY_OUTSIDE_HANDLER__) {
+      window.removeEventListener('pointerdown', window.__AGY_OUTSIDE_HANDLER__, true);
+      window.removeEventListener('mousedown', window.__AGY_OUTSIDE_HANDLER__, true);
+    }
 
-    // Press Escape to close popover
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        const popoverEl = document.getElementById('agy-account-switcher-popover');
-        if (popoverEl && popoverEl.classList.contains('open')) {
-          closePopover();
+    window.__AGY_OUTSIDE_HANDLER__ = (e) => {
+      if (!isPopoverOpen) return;
+      const target = e.target;
+      const pop = document.getElementById('agy-account-switcher-popover');
+      const trig = document.getElementById('agy-avatar-trigger-btn');
+      if (!pop) return;
+
+      // If clicked inside popover or on the avatar button, ignore
+      if (target && target instanceof Node) {
+        if (pop.contains(target) || (trig && trig.contains(target))) {
+          return;
         }
       }
-    });
+
+      closePopover();
+    };
+
+    window.addEventListener('pointerdown', window.__AGY_OUTSIDE_HANDLER__, true);
+    window.addEventListener('mousedown', window.__AGY_OUTSIDE_HANDLER__, true);
+
+    if (!window.__AGY_KEY_BOUND__) {
+      window.__AGY_KEY_BOUND__ = true;
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && isPopoverOpen) {
+          // If child dialogs are active, dismiss child dialog first
+          const updateDlg = document.getElementById('agy-update-dialog');
+          const confirmDlg = document.getElementById('agy-confirm-dialog');
+          const deleteDlg = document.getElementById('agy-delete-dialog');
+          if (updateDlg && updateDlg.style.display !== 'none') {
+            hideUpdateDialog();
+            return;
+          }
+          if (confirmDlg && confirmDlg.style.display !== 'none') {
+            hideConfirm();
+            return;
+          }
+          if (deleteDlg && deleteDlg.style.display !== 'none') {
+            hideDeleteDialog();
+            return;
+          }
+          closePopover();
+        }
+      }, true);
+    }
   }
 
   // 5. Popover Open, Close, Toggle
+  let openPopoverRefreshInterval = null;
+
   async function togglePopover() {
-    const popover = document.getElementById('agy-account-switcher-popover');
-    const isOpen = popover ? popover.classList.contains('open') : isPopoverOpen;
-    if (isOpen) {
+    if (isPopoverOpen) {
       closePopover();
     } else {
       await openPopover();
@@ -308,11 +361,6 @@
     const popover = document.getElementById('agy-account-switcher-popover');
     const trigger = document.getElementById('agy-avatar-trigger-btn');
     if (!popover) return;
-
-    // Clean any residual inline overrides
-    popover.style.removeProperty('opacity');
-    popover.style.removeProperty('visibility');
-    popover.style.removeProperty('pointer-events');
 
     // Calculate position adjacent to the sidebar
     if (trigger) {
@@ -326,21 +374,31 @@
     popover.classList.add('open');
     isPopoverOpen = true;
 
-    // Refresh accounts on open
+    // Refresh accounts immediately on open
     await fetchAndRenderAccounts(true);
+
+    // Auto-refresh every 30 seconds while popover is open
+    if (openPopoverRefreshInterval) clearInterval(openPopoverRefreshInterval);
+    openPopoverRefreshInterval = setInterval(() => {
+      if (isPopoverOpen) {
+        fetchAndRenderAccounts(true);
+      } else {
+        clearInterval(openPopoverRefreshInterval);
+        openPopoverRefreshInterval = null;
+      }
+    }, 30000);
   }
 
   function closePopover() {
     const popover = document.getElementById('agy-account-switcher-popover');
-    if (popover) {
-      popover.classList.remove('open');
-      // Remove any inline overrides so CSS !important applies cleanly
-      popover.style.removeProperty('opacity');
-      popover.style.removeProperty('visibility');
-      popover.style.removeProperty('pointer-events');
-    }
+    if (popover) popover.classList.remove('open');
     isPopoverOpen = false;
+    if (openPopoverRefreshInterval) {
+      clearInterval(openPopoverRefreshInterval);
+      openPopoverRefreshInterval = null;
+    }
     hideConfirm();
+    hideDeleteDialog();
   }
 
   // 6. Fetch & Render Accounts
@@ -375,31 +433,47 @@
 
     const img = document.getElementById('agy-avatar-img');
     const fallback = document.getElementById('agy-avatar-fallback');
-    const headerAvatar = document.getElementById('agy-header-avatar');
-    const headerTitle = document.getElementById('agy-header-title');
-    const headerEmail = document.getElementById('agy-header-email');
 
     if (active.profilePictureUrl && img) {
       img.src = active.profilePictureUrl;
       img.style.display = 'block';
       if (fallback) fallback.style.display = 'none';
-      if (headerAvatar) headerAvatar.src = active.profilePictureUrl;
     } else if (fallback) {
       fallback.innerText = (active.name || active.email || 'G').slice(0, 1).toUpperCase();
       fallback.style.display = 'flex';
       if (img) img.style.display = 'none';
     }
-
-    if (headerTitle) headerTitle.innerText = active.name || active.label || 'Active Account';
-    if (headerEmail) headerEmail.innerText = active.email;
   }
 
   function updateAutoSwitchUI(active) {
     const track = document.getElementById('agy-switch-track');
+    const container = document.getElementById('agy-auto-switch-container');
     if (track) {
       if (active) track.classList.add('active');
       else track.classList.remove('active');
     }
+    if (container) {
+      container.setAttribute('aria-checked', active ? 'true' : 'false');
+    }
+  }
+
+  function renderContinuousBar(pct, level, isHero = false) {
+    const safePct = Math.max(0, Math.min(100, Math.round(pct)));
+    if (isHero) {
+      return `
+        <div class="agy-smooth-track hero" title="${safePct}% Remaining">
+          <div class="agy-smooth-fill ${level} hero" style="width: ${safePct}%;">
+            <div class="agy-shimmer-flow"></div>
+            <div class="agy-lead-glow"></div>
+          </div>
+        </div>
+      `;
+    }
+    return `
+      <div class="agy-smooth-track standby" title="${safePct}% Remaining">
+        <div class="agy-smooth-fill ${level}" style="width: ${safePct}%;"></div>
+      </div>
+    `;
   }
 
   function renderAccountCards(accounts) {
@@ -407,101 +481,199 @@
     if (!body) return;
 
     if (!accounts || accounts.length === 0) {
-      body.innerHTML = `<div style="text-align:center;padding:20px;color:#94a3b8;font-size:12px;">No accounts found. Click "Add Account" below.</div>`;
+      body.innerHTML = `<div style="text-align:center;padding:24px;color:var(--agy-text-muted);font-size:12px;">No accounts found. Click "Add Account" below.</div>`;
       return;
     }
 
-    body.innerHTML = accounts.map(acc => {
-      const fiveHourPct = typeof acc.fiveHourPercent === 'number' ? acc.fiveHourPercent : (acc.remainingPercent || 100);
-      const fiveHourLevel = fiveHourPct > 50 ? 'high' : (fiveHourPct > 20 ? 'med' : 'low');
+    // Identify active hero session and standby reserve accounts
+    const activeAccount = accounts.find(a => a.isActive) || accounts[0];
+    const standbyAccounts = accounts.filter(a => a !== activeAccount);
 
-      const weeklyPct = typeof acc.weeklyPercent === 'number' ? acc.weeklyPercent : 100;
-      const weeklyLevel = weeklyPct > 50 ? 'high' : (weeklyPct > 20 ? 'med' : 'low');
+    // Update count in header
+    const countBadge = document.getElementById('agy-accounts-count');
+    if (countBadge) countBadge.innerText = accounts.length;
 
+    // Helper to format initials and avatars
+    const getAvatarHtml = (acc, isHero = false) => {
       const initials = (acc.name || acc.email || 'A').slice(0, 1).toUpperCase();
-      const avatarHtml = acc.profilePictureUrl 
-        ? `<img src="${acc.profilePictureUrl}" alt="Avatar" />` 
-        : `<span>${initials}</span>`;
+      if (acc.profilePictureUrl) {
+        return `<img src="${acc.profilePictureUrl}" alt="Avatar" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='flex';" /><span style="display:none;">${initials}</span>`;
+      }
+      return `<span>${initials}</span>`;
+    };
 
-      return `
-        <div class="agy-account-card ${acc.isActive ? 'active' : ''}">
-          <div class="agy-card-top">
-            <div class="agy-card-user-info">
-              <div class="agy-card-avatar">${avatarHtml}</div>
-              <div class="agy-card-names">
-                <div class="agy-card-label">
-                  <span>${acc.label}</span>
-                  <span class="agy-plan-badge">${acc.plan || 'PRO'}</span>
-                </div>
-                <div class="agy-card-email">${acc.email}</div>
+    const getPlanClass = (planRaw) => {
+      const p = (planRaw || 'Free').toLowerCase();
+      if (p.includes('pro')) return 'pro';
+      if (p.includes('team') || p.includes('ultimate')) return 'teams';
+      return 'free';
+    };
+
+    // --- 1. RENDER BENTO HERO COCKPIT (Active Live Session) ---
+    const heroFiveHourPct = typeof activeAccount.fiveHourPercent === 'number' ? activeAccount.fiveHourPercent : (activeAccount.remainingPercent || 100);
+    const heroFiveHourLevel = heroFiveHourPct > 50 ? 'healthy' : (heroFiveHourPct > 20 ? 'warning' : 'critical');
+    const heroWeeklyPct = typeof activeAccount.weeklyPercent === 'number' ? activeAccount.weeklyPercent : 100;
+    const heroWeeklyLevel = heroWeeklyPct > 50 ? 'healthy' : (heroWeeklyPct > 20 ? 'warning' : 'critical');
+    const heroDisplayEmail = (activeAccount.email || '').replace(/@(gmail|googlemail)\.com$/i, '');
+    const heroPlan = (activeAccount.plan || 'Free').toUpperCase();
+    const heroPlanClass = getPlanClass(activeAccount.plan);
+
+    const heroCockpitHtml = `
+      <div class="agy-hero-cockpit">
+        <div class="agy-cockpit-ambient-glow"></div>
+        <div class="agy-cockpit-header">
+          <div class="agy-cockpit-pilot">
+            <div class="agy-cockpit-avatar-wrapper">
+              <div class="agy-cockpit-avatar">
+                ${getAvatarHtml(activeAccount, true)}
               </div>
             </div>
-            <div class="agy-card-actions">
-              ${acc.isActive 
-                ? `<div class="agy-active-indicator" title="Currently selected active session">
-                     <span class="agy-active-dot"></span>
-                     <span>Active</span>
-                   </div>` 
-                : `<button class="agy-card-switch-btn" onclick="window.__AGY_SWITCHER__.requestSwitch('${acc.id}', '${acc.label}', '${acc.email}')">
-                     <span>Switch</span>
-                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                   </button>`
-              }
+            <div class="agy-cockpit-identity">
+              <div class="agy-cockpit-name-row">
+                <span class="agy-cockpit-username" title="${activeAccount.email}">${heroDisplayEmail}</span>
+                <span class="agy-foil-badge ${heroPlanClass}">${heroPlan}</span>
+              </div>
             </div>
           </div>
+          <div class="agy-active-indicator" title="Currently active session">
+            <span class="agy-active-dot"></span>
+            <span>ACTIVE</span>
+          </div>
+        </div>
 
-          <!-- Dual Quotas: 5-Hour Limit & Weekly Limit -->
-          <div class="agy-card-quotas-wrapper">
-            <!-- 5-Hour Limit -->
-            <div class="agy-quota-metric" title="${acc.fiveHourDesc || ''}">
-              <div class="agy-quota-metric-header">
-                <div class="agy-quota-title">
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <polyline points="12 6 12 12 16 14"></polyline>
-                  </svg>
-                  <span>5-Hour Limit</span>
-                </div>
-                <div class="agy-quota-meta">
-                  <span class="agy-quota-pct ${fiveHourLevel}">${fiveHourPct}%</span>
-                  <span class="agy-quota-sep">•</span>
-                  <span class="agy-quota-cd">${acc.fiveHourCountdownText || acc.resetCountdownText || 'Ready'}</span>
-                </div>
+        <!-- Telemetry Gauges (Segmented LED Bars) -->
+        <div class="agy-cockpit-telemetry">
+          <!-- 5-Hour Session Meter -->
+          <div class="agy-telemetry-gauge-card" title="${activeAccount.fiveHourDesc || ''}">
+            <div class="agy-gauge-top">
+              <div class="agy-gauge-title">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+                <span>5-Hour Quota</span>
               </div>
-              <div class="agy-quota-track">
-                <div class="agy-quota-fill ${fiveHourLevel}" style="width: ${fiveHourPct}%;"></div>
+              <div class="agy-gauge-readout">
+                <span class="agy-gauge-pct ${heroFiveHourLevel}">${heroFiveHourPct}%</span>
+                <span class="agy-gauge-countdown">${activeAccount.fiveHourCountdownText || activeAccount.resetCountdownText || 'Ready'}</span>
               </div>
             </div>
+            ${renderContinuousBar(heroFiveHourPct, heroFiveHourLevel, true)}
+          </div>
 
-            <!-- Weekly Limit -->
-            <div class="agy-quota-metric" title="${acc.weeklyDesc || ''}">
-              <div class="agy-quota-metric-header">
-                <div class="agy-quota-title">
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                    <line x1="16" y1="2" x2="16" y2="6"></line>
-                    <line x1="8" y1="2" x2="8" y2="6"></line>
-                    <line x1="3" y1="10" x2="21" y2="10"></line>
-                  </svg>
-                  <span>Weekly Limit</span>
-                </div>
-                <div class="agy-quota-meta">
-                  <span class="agy-quota-pct ${weeklyLevel}">${weeklyPct}%</span>
-                  <span class="agy-quota-sep">•</span>
-                  <span class="agy-quota-cd">${acc.weeklyCountdownText || 'Active Pool'}</span>
-                </div>
+          <!-- Weekly Horizon Meter -->
+          <div class="agy-telemetry-gauge-card" title="${activeAccount.weeklyDesc || ''}">
+            <div class="agy-gauge-top">
+              <div class="agy-gauge-title">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+                <span>Weekly Pool</span>
               </div>
-              <div class="agy-quota-track">
-                <div class="agy-quota-fill ${weeklyLevel}" style="width: ${weeklyPct}%;"></div>
+              <div class="agy-gauge-readout">
+                <span class="agy-gauge-pct ${heroWeeklyLevel}">${heroWeeklyPct}%</span>
+                <span class="agy-gauge-countdown">${activeAccount.weeklyCountdownText || 'Active'}</span>
               </div>
             </div>
+            ${renderContinuousBar(heroWeeklyPct, heroWeeklyLevel, true)}
+          </div>
+        </div>
+      </div>
+    `;
+
+    // --- 2. RENDER STANDBY ACCOUNTS VAULT (High-Density Shelf) ---
+    let standbyShelfHtml = '';
+    if (standbyAccounts.length > 0) {
+      standbyShelfHtml = `
+        <div class="agy-standby-vault-shelf">
+          <div class="agy-standby-shelf-header">
+            <span class="agy-shelf-title">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="3" y1="9" x2="21" y2="9"></line>
+                <line x1="9" y1="21" x2="9" y2="9"></line>
+              </svg>
+              <span>STANDBY ACCOUNTS</span>
+            </span>
+            <span class="agy-shelf-count">${standbyAccounts.length}</span>
+          </div>
+
+          <div class="agy-standby-list">
+            ${standbyAccounts.map(acc => {
+              const fivePct = typeof acc.fiveHourPercent === 'number' ? acc.fiveHourPercent : (acc.remainingPercent || 100);
+              const fiveLvl = fivePct > 50 ? 'healthy' : (fivePct > 20 ? 'warning' : 'critical');
+              const wkPct = typeof acc.weeklyPercent === 'number' ? acc.weeklyPercent : 100;
+              const wkLvl = wkPct > 50 ? 'healthy' : (wkPct > 20 ? 'warning' : 'critical');
+              const emailDisplay = (acc.email || '').replace(/@(gmail|googlemail)\.com$/i, '');
+              const plan = (acc.plan || 'Free').toUpperCase();
+              const planClass = getPlanClass(acc.plan);
+              const needsRelogin = acc.status === 'needs_relogin';
+
+              return `
+                <div class="agy-standby-card-d2">
+                  <!-- Row 1: Identity & Actions -->
+                  <div class="agy-standby-top-row">
+                    <div class="agy-standby-identity-left">
+                      <div class="agy-standby-avatar-wrapper">
+                        <div class="agy-standby-micro-avatar">
+                          ${getAvatarHtml(acc)}
+                        </div>
+                        <span class="agy-status-pip ${needsRelogin ? 'critical' : 'ready'}"></span>
+                      </div>
+                      <span class="agy-standby-username" title="${acc.email}">${emailDisplay}</span>
+                      <span class="agy-mini-badge ${planClass}">${plan}</span>
+                    </div>
+
+                    <div class="agy-standby-actions-cluster">
+                      ${needsRelogin ? `
+                        <button class="agy-btn-tactile-swap relogin" onclick="window.__AGY_SWITCHER__.requestRelogin('${acc.id}', '${acc.email}')" title="Re-authenticate session">
+                          <span>Re-login</span>
+                        </button>
+                      ` : `
+                        <button class="agy-btn-tactile-swap" onclick="window.__AGY_SWITCHER__.requestSwitch('${acc.id}', '${acc.email}')" title="Switch to this account">
+                          <svg class="agy-swap-bolt" width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                          </svg>
+                          <span>Switch</span>
+                        </button>
+                      `}
+                      <button class="agy-card-delete-btn" onclick="window.__AGY_SWITCHER__.requestDelete('${acc.id}', '${acc.email}')" title="Remove account">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Row 2: Extended Balanced Telemetry Strip -->
+                  <div class="agy-standby-telemetry-strip">
+                    <div class="agy-telemetry-half" title="${acc.fiveHourDesc || '5-Hour Quota: ' + fivePct + '%'}">
+                      <span class="agy-telemetry-name">5H</span>
+                      ${renderContinuousBar(fivePct, fiveLvl, false)}
+                      <span class="agy-telemetry-readout ${fiveLvl}">${fivePct}%</span>
+                    </div>
+
+                    <div class="agy-telemetry-center-divider"></div>
+
+                    <div class="agy-telemetry-half" title="${acc.weeklyDesc || 'Weekly Pool: ' + wkPct + '%'}">
+                      <span class="agy-telemetry-name">WK</span>
+                      ${renderContinuousBar(wkPct, wkLvl, false)}
+                      <span class="agy-telemetry-readout ${wkLvl}">${wkPct}%</span>
+                    </div>
+                  </div>
+                </div>
+              `;
+            }).join('')}
           </div>
         </div>
       `;
-    }).join('');
+    }
+
+    body.innerHTML = heroCockpitHtml + standbyShelfHtml;
   }
 
-  // 7. Action Handlers
+  // 8. Action Handlers: Refresh, AutoSwitch, AddAccount
   async function onRefreshClick() {
     await fetchAndRenderAccounts(true);
   }
@@ -522,44 +694,6 @@
     }
   }
 
-  function showConfirm(accId, label, email) {
-    const dialog = document.getElementById('agy-confirm-dialog');
-    const text = document.getElementById('agy-confirm-text');
-    const proceedBtn = document.getElementById('agy-confirm-proceed');
-    const cancelBtn = document.getElementById('agy-confirm-cancel');
-
-    if (!dialog || !text) return;
-
-    text.innerHTML = `Switch active Google account to <strong>${label}</strong> (<em>${email}</em>)?<br><span style="font-size:11px;color:#64748b;display:block;margin-top:6px;">All active chats and projects remain safe.</span>`;
-    dialog.style.display = 'flex';
-
-    cancelBtn.onclick = hideConfirm;
-    proceedBtn.onclick = async () => {
-      proceedBtn.innerText = 'Switching...';
-      proceedBtn.disabled = true;
-      try {
-        await fetch(`${API_BASE}/api/switch`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: accId })
-        });
-      } catch (e) {
-        alert('Switch failed: ' + e.message);
-        hideConfirm();
-      }
-    };
-  }
-
-  function hideConfirm() {
-    const dialog = document.getElementById('agy-confirm-dialog');
-    const proceedBtn = document.getElementById('agy-confirm-proceed');
-    if (dialog) dialog.style.display = 'none';
-    if (proceedBtn) {
-      proceedBtn.innerText = 'Confirm Switch';
-      proceedBtn.disabled = false;
-    }
-  }
-
   async function onAddAccountClick() {
     const btn = document.getElementById('agy-add-account-btn');
     if (btn) btn.innerHTML = `<span>Opening Login...</span>`;
@@ -577,7 +711,143 @@
     }
   }
 
-  // 7. Update Management
+  // 9. Modal Dialogs: Switch, Delete, Relogin
+  let switchWatchdogTimer = null;
+
+  function showConfirm(accId, email) {
+    const dialog = document.getElementById('agy-confirm-dialog');
+    const text = document.getElementById('agy-confirm-text');
+    const proceedBtn = document.getElementById('agy-confirm-proceed');
+    const cancelBtn = document.getElementById('agy-confirm-cancel');
+
+    if (!dialog || !text) return;
+
+    if (switchWatchdogTimer) {
+      clearTimeout(switchWatchdogTimer);
+      switchWatchdogTimer = null;
+    }
+
+    text.innerHTML = `Switch active Google account to <strong>${email}</strong>?<br><span style="font-size:11px;color:#64748b;display:block;margin-top:6px;">All active chats and projects remain safe.</span>`;
+    dialog.style.display = 'flex';
+
+    cancelBtn.onclick = hideConfirm;
+    proceedBtn.onclick = async () => {
+      proceedBtn.innerText = 'Switching...';
+      proceedBtn.disabled = true;
+
+      // 7-second safety watchdog: resets button and unlocks UI if reload is delayed or severed
+      if (switchWatchdogTimer) clearTimeout(switchWatchdogTimer);
+      switchWatchdogTimer = setTimeout(() => {
+        proceedBtn.innerText = 'Confirm Switch';
+        proceedBtn.disabled = false;
+        alert('Switch response received, but window reload was delayed. Please check active account.');
+      }, 7000);
+
+      try {
+        const res = await fetch(`${API_BASE}/api/switch`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: accId })
+        });
+        const data = await res.json();
+        if (data.alreadyActive) {
+          if (switchWatchdogTimer) {
+            clearTimeout(switchWatchdogTimer);
+            switchWatchdogTimer = null;
+          }
+          hideConfirm();
+          await fetchAndRenderAccounts(true);
+        } else if (!res.ok) {
+          if (switchWatchdogTimer) {
+            clearTimeout(switchWatchdogTimer);
+            switchWatchdogTimer = null;
+          }
+          alert('Switch notice: ' + (data.error || 'Switch failed'));
+          hideConfirm();
+        }
+      } catch (e) {
+        if (switchWatchdogTimer) {
+          clearTimeout(switchWatchdogTimer);
+          switchWatchdogTimer = null;
+        }
+        alert('Switch failed: ' + e.message);
+        hideConfirm();
+      }
+    };
+  }
+
+  function hideConfirm() {
+    if (switchWatchdogTimer) {
+      clearTimeout(switchWatchdogTimer);
+      switchWatchdogTimer = null;
+    }
+    const dialog = document.getElementById('agy-confirm-dialog');
+    const proceedBtn = document.getElementById('agy-confirm-proceed');
+    if (dialog) dialog.style.display = 'none';
+    if (proceedBtn) {
+      proceedBtn.innerText = 'Confirm Switch';
+      proceedBtn.disabled = false;
+    }
+  }
+
+  // Delete Account Dialog
+  function showDeleteConfirm(accId, email) {
+    const dialog = document.getElementById('agy-delete-dialog');
+    const text = document.getElementById('agy-delete-text');
+    const proceedBtn = document.getElementById('agy-delete-proceed');
+    const cancelBtn = document.getElementById('agy-delete-cancel');
+    if (!dialog || !text) return;
+
+    text.innerHTML = `Are you sure you want to remove <strong>${email}</strong> from switcher?<br><span style="font-size:11px;color:#ef4444;display:block;margin-top:6px;">Credentials for this account will be removed locally.</span>`;
+    dialog.style.display = 'flex';
+
+    cancelBtn.onclick = hideDeleteDialog;
+    proceedBtn.onclick = async () => {
+      proceedBtn.innerText = 'Removing...';
+      proceedBtn.disabled = true;
+      try {
+        const res = await fetch(`${API_BASE}/api/delete-account`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: accId })
+        });
+        const d = await res.json();
+        if (d.ok) {
+          hideDeleteDialog();
+          await fetchAndRenderAccounts(false);
+        } else {
+          alert('Delete failed: ' + (d.error || 'Unknown error'));
+        }
+      } catch (err) {
+        alert('Delete error: ' + err.message);
+      } finally {
+        proceedBtn.innerText = 'Remove';
+        proceedBtn.disabled = false;
+      }
+    };
+  }
+
+  function hideDeleteDialog() {
+    const dialog = document.getElementById('agy-delete-dialog');
+    if (dialog) dialog.style.display = 'none';
+  }
+
+  // Request Re-login
+  async function requestRelogin(accId, email) {
+    if (confirm(`Session for ${email} needs re-authentication. Switch and open login now?`)) {
+      try {
+        await fetch(`${API_BASE}/api/switch`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: accId })
+        });
+      } catch (e) {
+        alert('Switch failed: ' + e.message);
+      }
+    }
+  }
+
+  // 10. Update Management
   let cachedUpdateInfo = null;
 
   async function checkUpdateStatus() {
@@ -589,11 +859,14 @@
 
       const pill = document.getElementById('agy-update-pill');
       const text = document.getElementById('agy-update-text');
+      const verTag = document.getElementById('agy-version-tag');
       if (pill && data.hasUpdate) {
-        if (text) text.innerText = `v${data.latestVersion}`;
+        if (text) text.innerText = `Update v${data.latestVersion}`;
         pill.style.display = 'inline-flex';
+        if (verTag) verTag.style.display = 'none';
       } else if (pill) {
         pill.style.display = 'none';
+        if (verTag) verTag.style.display = 'inline-flex';
       }
     } catch (e) {
       console.warn('[agy-switcher] Update check failed:', e.message);
@@ -643,7 +916,7 @@
     window.open(url, '_blank');
   }
 
-  // 8. Global Hook
+  // 11. Global Hook
   window.__AGY_SWITCHER__ = {
     init: function(css) {
       injectStyles(css);
@@ -651,7 +924,7 @@
       injectAvatarTriggerButton();
       injectPopoverStructure();
       fetchAndRenderAccounts(false);
-      // Check every 3 seconds ONLY if button is missing (clearing any stale interval)
+      // Check every 3 seconds ONLY if button is missing
       if (window.__AGY_SWITCHER_INTERVAL__) {
         clearInterval(window.__AGY_SWITCHER_INTERVAL__);
       }
@@ -666,6 +939,8 @@
     closePopover,
     togglePopover,
     requestSwitch: showConfirm,
+    requestDelete: showDeleteConfirm,
+    requestRelogin: requestRelogin,
     refresh: fetchAndRenderAccounts
   };
 

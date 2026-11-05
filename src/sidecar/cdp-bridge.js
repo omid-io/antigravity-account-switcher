@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import { EventEmitter } from 'events';
+import { logger } from './logger.js';
 
 const DEVTOOLS_PORT_PATH = path.join(
   process.env.APPDATA || path.join(os.homedir(), 'AppData', 'Roaming'),
@@ -18,6 +19,7 @@ export class CdpBridge extends EventEmitter {
     this.msgId = 1;
     this.pendingCallbacks = new Map();
     this.isConnected = false;
+    this.isConnecting = false;
     this.reconnectTimer = null;
   }
 
@@ -31,7 +33,7 @@ export class CdpBridge extends EventEmitter {
       const port = parseInt(content[0], 10);
       return isNaN(port) ? null : port;
     } catch (e) {
-      console.error('[cdp-bridge] Error reading DevTools port:', e.message);
+      logger.error('cdp-bridge', 'Error reading DevTools port', e);
       return null;
     }
   }
@@ -44,11 +46,13 @@ export class CdpBridge extends EventEmitter {
     if (!this.port) return null;
 
     try {
-      const res = await fetch(`http://127.0.0.1:${this.port}/json/list`);
+      const res = await fetch(`http://127.0.0.1:${this.port}/json/list`, {
+        signal: AbortSignal.timeout(3000)
+      });
       if (!res.ok) return null;
       const targets = await res.json();
       // Target must be a page running on local host server or Antigravity shell
-      return targets.find(t => t.type === 'page' && (t.url.includes('127.0.0.1') || t.title.includes('Antigravity')));
+      return targets.find(t => t.type === 'page' && (t.url?.includes('127.0.0.1') || t.title?.includes('Antigravity')));
     } catch {
       return null;
     }
@@ -61,80 +65,115 @@ export class CdpBridge extends EventEmitter {
     if (this.isConnected && this.ws?.readyState === WebSocket.OPEN) {
       return true;
     }
-
-    const target = await this.findMainTarget();
-    if (!target || !target.webSocketDebuggerUrl) {
-      this.scheduleReconnect();
+    if (this.isConnecting) {
       return false;
     }
+    this.isConnecting = true;
 
-    return new Promise((resolve) => {
-      try {
-        this.ws = new WebSocket(target.webSocketDebuggerUrl);
+    try {
+      const target = await this.findMainTarget();
+      if (!target || !target.webSocketDebuggerUrl) {
+        this.scheduleReconnect();
+        return false;
+      }
 
-        this.ws.onopen = async () => {
-          this.isConnected = true;
-          this.pageUrl = target.url;
-          console.log(`[cdp-bridge] Connected to Antigravity window: "${target.title}" (Port ${this.port})`);
+      return await new Promise((resolve) => {
+        let settled = false;
+        const connectTimeout = setTimeout(() => {
+          logger.warn('cdp-bridge', 'WebSocket connection handshake timed out after 6000ms');
+          try { this.ws?.close(); } catch {}
+          done(false);
+        }, 6000);
 
-          // Enable Console, Network and Page domains to observe errors and reloads
-          this.send('Console.enable');
-          this.send('Network.enable');
-          this.send('Page.enable');
-
-          this.emit('connected', target);
-          resolve(true);
-        };
-
-        this.ws.onmessage = (event) => {
-          try {
-            const data = JSON.parse(event.data);
-            
-            // Handle RPC response callbacks
-            if (data.id && this.pendingCallbacks.has(data.id)) {
-              const cb = this.pendingCallbacks.get(data.id);
-              this.pendingCallbacks.delete(data.id);
-              cb(data);
-              return;
-            }
-
-            // Handle Console API messages
-            if (data.method === 'Console.messageAdded') {
-              this.emit('console', data.params?.message);
-              this.checkConsoleForQuotaError(data.params?.message);
-            }
-
-            // Handle Network response received
-            if (data.method === 'Network.responseReceived') {
-              const resp = data.params?.response;
-              if (resp?.status === 429) {
-                this.emit('quota-exhausted', { source: 'network', status: 429, url: resp.url });
-              }
-            }
-
-            this.emit('event', data);
-          } catch (e) {
-            console.error('[cdp-bridge] Error handling message:', e.message);
+        const done = (val) => {
+          if (!settled) {
+            settled = true;
+            clearTimeout(connectTimeout);
+            resolve(val);
           }
         };
 
-        this.ws.onclose = () => {
-          this.isConnected = false;
-          console.log('[cdp-bridge] Connection closed. Reconnecting...');
-          this.emit('disconnected');
-          this.scheduleReconnect();
-        };
+        try {
+          this.ws = new WebSocket(target.webSocketDebuggerUrl);
 
-        this.ws.onerror = (err) => {
-          console.error('[cdp-bridge] WebSocket error:', err.message || err);
-          this.ws?.close();
-        };
-      } catch (err) {
-        console.error('[cdp-bridge] Failed to initiate WebSocket:', err.message);
-        this.scheduleReconnect();
-        resolve(false);
-      }
-    });
+          this.ws.onopen = async () => {
+            this.isConnected = true;
+            this.pageUrl = target.url;
+            logger.info('cdp-bridge', `Connected to Antigravity window: "${target.title}" (Port ${this.port})`);
+
+            // Enable Console, Network and Page domains to observe errors and reloads
+            this.send('Console.enable').catch(() => {});
+            this.send('Network.enable').catch(() => {});
+            this.send('Page.enable').catch(() => {});
+
+            this.emit('connected', target);
+            done(true);
+          };
+
+          this.ws.onmessage = (event) => {
+            try {
+              const data = JSON.parse(event.data);
+              
+              // Handle RPC response callbacks
+              if (data.id && this.pendingCallbacks.has(data.id)) {
+                const entry = this.pendingCallbacks.get(data.id);
+                this.pendingCallbacks.delete(data.id);
+                if (entry.timer) clearTimeout(entry.timer);
+                entry.callback(data);
+                return;
+              }
+
+              // Handle Console API messages
+              if (data.method === 'Console.messageAdded') {
+                this.emit('console', data.params?.message);
+                this.checkConsoleForQuotaError(data.params?.message);
+              }
+
+              // Handle Network response received
+              if (data.method === 'Network.responseReceived') {
+                const resp = data.params?.response;
+                if (resp?.status === 429) {
+                  this.emit('quota-exhausted', { source: 'network', status: 429, url: resp.url });
+                }
+              }
+
+              this.emit('event', data);
+            } catch (e) {
+              logger.error('cdp-bridge', 'Error handling incoming message', e);
+            }
+          };
+
+          this.ws.onclose = () => {
+            this.isConnected = false;
+            logger.warn('cdp-bridge', 'WebSocket connection closed. Rejecting lingering callbacks.');
+            this.flushPendingCallbacks('WebSocket closed before response received');
+            this.emit('disconnected');
+            this.scheduleReconnect();
+            done(false);
+          };
+
+          this.ws.onerror = (err) => {
+            logger.error('cdp-bridge', 'WebSocket error', err?.message || err);
+            done(false);
+            this.ws?.close();
+          };
+        } catch (err) {
+          logger.error('cdp-bridge', 'Failed to initiate WebSocket connection', err);
+          this.scheduleReconnect();
+          done(false);
+        }
+      });
+    } finally {
+      this.isConnecting = false;
+    }
+  }
+
+  flushPendingCallbacks(reason) {
+    for (const [id, entry] of this.pendingCallbacks.entries()) {
+      if (entry.timer) clearTimeout(entry.timer);
+      entry.callback({ error: { message: reason } });
+    }
+    this.pendingCallbacks.clear();
   }
 
   checkConsoleForQuotaError(msg) {
@@ -154,20 +193,30 @@ export class CdpBridge extends EventEmitter {
   }
 
   /**
-   * Low-level send command.
+   * Low-level send command with strict timeout.
    */
-  send(method, params = {}) {
+  send(method, params = {}, timeoutMs = 8000) {
     const id = this.msgId++;
     return new Promise((resolve, reject) => {
       if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
         return reject(new Error('WebSocket not connected'));
       }
 
-      this.pendingCallbacks.set(id, (res) => {
-        if (res.error) {
-          reject(new Error(res.error.message || JSON.stringify(res.error)));
-        } else {
-          resolve(res.result);
+      const timer = setTimeout(() => {
+        if (this.pendingCallbacks.has(id)) {
+          this.pendingCallbacks.delete(id);
+          reject(new Error(`CDP command timed out after ${timeoutMs}ms: ${method}`));
+        }
+      }, timeoutMs);
+
+      this.pendingCallbacks.set(id, {
+        timer,
+        callback: (res) => {
+          if (res.error) {
+            reject(new Error(res.error.message || JSON.stringify(res.error)));
+          } else {
+            resolve(res.result);
+          }
         }
       });
 
@@ -179,9 +228,10 @@ export class CdpBridge extends EventEmitter {
    * Evaluates an expression inside the Antigravity window renderer.
    * @param {string} expression 
    * @param {boolean} awaitPromise 
+   * @param {number} timeoutMs
    * @returns {Promise<any>} Evaluated value
    */
-  async evaluate(expression, awaitPromise = true) {
+  async evaluate(expression, awaitPromise = true, timeoutMs = 8000) {
     if (!this.isConnected) {
       await this.connect();
     }
@@ -189,7 +239,7 @@ export class CdpBridge extends EventEmitter {
       expression,
       awaitPromise,
       returnByValue: true
-    });
+    }, timeoutMs);
     return result?.result?.value;
   }
 
@@ -197,17 +247,17 @@ export class CdpBridge extends EventEmitter {
    * Soft reloads the Antigravity renderer window.
    */
   async reloadWindow() {
-    console.log('[cdp-bridge] Reloading Antigravity window...');
+    logger.info('cdp-bridge', 'Triggering Antigravity window reload...');
     try {
-      await this.evaluate('window.location.reload()', false);
+      await this.evaluate('window.location.reload()', false, 3000);
       return true;
     } catch {
       // In case evaluation fails due to immediate navigation, send Page.reload
       try {
-        await this.send('Page.reload', { ignoreCache: true });
+        await this.send('Page.reload', { ignoreCache: true }, 3000);
         return true;
       } catch (e) {
-        console.error('[cdp-bridge] Error during reload:', e.message);
+        logger.error('cdp-bridge', 'Error during reload', e);
         return false;
       }
     }

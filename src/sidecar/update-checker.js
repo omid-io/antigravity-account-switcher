@@ -64,7 +64,8 @@ export async function checkForUpdates(forceRefresh = false) {
   // 1. Query npm registry directly (Official, instant, zero rate-limit)
   try {
     const npmRes = await fetch(`https://registry.npmjs.org/${NPM_PACKAGE}/latest`, {
-      headers: { 'Accept': 'application/json' }
+      headers: { 'Accept': 'application/json' },
+      signal: AbortSignal.timeout(3000)
     });
     if (npmRes.ok) {
       const npmData = await npmRes.json();
@@ -77,7 +78,8 @@ export async function checkForUpdates(forceRefresh = false) {
     // 2. Fallback: Check GitHub if npm registry is unreachable
     try {
       const rawRes = await fetch(`https://raw.githubusercontent.com/${GITHUB_REPO}/master/package.json`, {
-        headers: { 'User-Agent': 'antigravity-account-switcher' }
+        headers: { 'User-Agent': 'antigravity-account-switcher' },
+        signal: AbortSignal.timeout(3000)
       });
       if (rawRes.ok) {
         const rawPkg = await rawRes.json();

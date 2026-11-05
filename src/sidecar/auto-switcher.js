@@ -1,5 +1,6 @@
-import { switchProfile } from './vault-manager.js';
+import { executeAccountSwitch } from './index.js';
 import { getAllAccountsQuotaSummary } from './quota-poller.js';
+import { logger } from './logger.js';
 
 export class AutoSwitcher {
   /**
@@ -17,14 +18,14 @@ export class AutoSwitcher {
 
   setEnabled(val) {
     this.isEnabled = !!val;
-    console.log(`[auto-switcher] Auto-switch feature is now: ${this.isEnabled ? 'ENABLED' : 'DISABLED'}`);
+    logger.info('auto-switcher', `Auto-switch feature is now: ${this.isEnabled ? 'ENABLED' : 'DISABLED'}`);
   }
 
   initListeners() {
     this.cdp.on('quota-exhausted', async (details) => {
-      console.warn('[auto-switcher] Quota exhaustion detected via CDP:', details);
+      logger.warn('auto-switcher', `Quota exhaustion detected via CDP: ${JSON.stringify(details)}`);
       if (!this.isEnabled) {
-        console.log('[auto-switcher] Auto-switch is disabled by user. Ignoring event.');
+        logger.info('auto-switcher', 'Auto-switch is disabled by user. Ignoring event.');
         return;
       }
 
@@ -41,32 +42,36 @@ export class AutoSwitcher {
     this.isSwitching = true;
 
     try {
-      console.log('[auto-switcher] Evaluating eligible candidate accounts...');
+      logger.info('auto-switcher', 'Evaluating eligible candidate accounts...');
       const summary = await getAllAccountsQuotaSummary(this.cdp);
       
-      // Filter candidate accounts that are not currently active and have quota
+      // Candidate filter MUST check BOTH fiveHourPercent > 10 AND weeklyPercent > 10 AND !a.needsRelogin AND a.status === 'ready'
       const candidates = summary
-        .filter(a => !a.isActive && a.remainingPercent > 5)
-        .sort((a, b) => b.remainingPercent - a.remainingPercent);
+        .filter(a => !a.isActive && a.fiveHourPercent > 10 && a.weeklyPercent > 10 && !a.needsRelogin && a.status === 'ready')
+        .sort((a, b) => {
+          if (b.fiveHourPercent !== a.fiveHourPercent) {
+            return b.fiveHourPercent - a.fiveHourPercent;
+          }
+          return b.weeklyPercent - a.weeklyPercent;
+        });
 
       if (candidates.length === 0) {
-        console.warn('[auto-switcher] No available backup accounts with remaining quota.');
-        await this.showToast('All accounts have exhausted quota. Please wait for reset.');
+        logger.warn('auto-switcher', 'No available backup accounts with remaining quota (>10% 5h and weekly, ready status).');
+        await this.showToast('All backup accounts have exhausted quota. Please wait for reset.');
         return;
       }
 
       const bestTarget = candidates[0];
-      console.log(`[auto-switcher] Switching automatically to ${bestTarget.label} (${bestTarget.email}) with ${bestTarget.remainingPercent}% quota!`);
+      logger.info('auto-switcher', `Switching automatically to ${bestTarget.label} (${bestTarget.email}) with ${bestTarget.fiveHourPercent}% (5h) / ${bestTarget.weeklyPercent}% (weekly) quota!`);
 
-      await this.showToast(`Auto-switching to ${bestTarget.label} (${bestTarget.remainingPercent}% quota)...`);
+      await this.showToast(`Auto-switching to ${bestTarget.label} (${bestTarget.fiveHourPercent}% 5h, ${bestTarget.weeklyPercent}% weekly)...`);
 
       // Small pause so toast is visible
       await new Promise(r => setTimeout(r, 1000));
 
-      switchProfile(bestTarget.id);
-      await this.cdp.reloadWindow();
+      await executeAccountSwitch(bestTarget.id, this.cdp);
     } catch (err) {
-      console.error('[auto-switcher] Error during auto-switch:', err.message);
+      logger.error('auto-switcher', `Error during auto-switch: ${err.message}`);
     } finally {
       this.isSwitching = false;
     }

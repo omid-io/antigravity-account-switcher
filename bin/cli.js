@@ -101,6 +101,21 @@ async function run() {
         console.log(`Active Account: ${active.label} (${active.email}) [${active.plan || 'Pro'}]`);
       }
       console.log('===================================================================\n');
+      return;
+    }
+
+    case 'logs': {
+      const { logger } = await import('../src/sidecar/logger.js');
+      const lines = parseInt(args[1] || '60', 10);
+      console.log(`\n📜 Antigravity Switcher Logs (Last ${lines} lines) [${logger.getLogFilePath()}]:`);
+      console.log('───────────────────────────────────────────────────────────────────');
+      const logs = logger.getRecentLogs(lines);
+      if (logs.length === 0) {
+        console.log('No log entries found yet.');
+      } else {
+        logs.forEach(l => console.log(l));
+      }
+      console.log('───────────────────────────────────────────────────────────────────\n');
       process.exit(0);
       break;
     }
@@ -145,15 +160,52 @@ async function run() {
         process.exit(1);
       }
       const profiles = listProfiles();
-      const match = profiles.find(p => p.id === target || p.email.toLowerCase() === target.toLowerCase());
+      const match = profiles.find(p => p.id === target || (p.email && p.email.toLowerCase() === target.toLowerCase()));
       if (!match) {
         console.error(`Error: No account found matching "${target}"`);
         process.exit(1);
       }
-      switchProfile(match.id);
-      console.log(`Successfully switched active account to ${match.label} (${match.email})`);
-      process.exit(0);
-      break;
+
+      // If sidecar is online, dispatch POST /api/switch for live Language Server restart and window reload
+      let sidecarHandled = false;
+      try {
+        const sidecarRes = await fetch('http://127.0.0.1:51444/api/switch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: match.id }),
+          signal: AbortSignal.timeout(15000)
+        });
+
+        sidecarHandled = true;
+        const data = await sidecarRes.json().catch(() => ({}));
+
+        if (sidecarRes.ok) {
+          if (data.alreadyActive) {
+            console.log(`Account ${match.label} (${match.email}) is already active.`);
+          } else {
+            console.log(`Successfully switched active account to ${match.label} (${match.email}) via Sidecar (Language Server restarted & window reloaded).`);
+          }
+          return;
+        } else {
+          console.error(`Error: Switch failed on sidecar: ${data.error || sidecarRes.statusText}`);
+          process.exit(1);
+        }
+      } catch (err) {
+        // If the request succeeded in reaching sidecar but failed on JSON or abort
+        if (sidecarHandled) {
+          console.error(`Error: Switch failed on sidecar: ${err.message}`);
+          process.exit(1);
+        }
+      }
+
+      // Fallback only if sidecar is truly offline
+      const res = switchProfile(match.id);
+      if (res.alreadyActive) {
+        console.log(`Account ${match.label} (${match.email}) is already active.`);
+      } else {
+        console.log(`Switched active account to ${match.label} (${match.email}) in vault (Sidecar offline; restart Antigravity to apply).`);
+      }
+      return;
     }
 
     case 'snapshot': {

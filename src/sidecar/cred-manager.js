@@ -1,6 +1,7 @@
 import { execSync } from 'child_process';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { logger } from './logger.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -19,9 +20,11 @@ export function readActiveCredential() {
 
     if (!output) return null;
     const jsonStr = Buffer.from(output, 'base64').toString('utf8');
-    return JSON.parse(jsonStr);
+    const parsed = JSON.parse(jsonStr);
+    logger.debug('cred-manager', `Active credential read: ${parsed?.id_token_email || 'unknown'}`);
+    return parsed;
   } catch (err) {
-    console.error('[cred-manager] Error reading active credential:', err.message);
+    logger.error('cred-manager', 'Error reading active credential', err);
     return null;
   }
 }
@@ -39,9 +42,11 @@ export function writeActiveCredential(credentialObj, userName = 'antigravity') {
     const cmd = `powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "${PS1_PATH}" -Action write -Target "${TARGET_NAME}" -UserName "${userName}" -Base64Payload "${b64}"`;
     const output = execSync(cmd, { encoding: 'utf8', timeout: 10000 }).trim();
 
-    return output.toLowerCase().includes('true');
+    const ok = output.toLowerCase().includes('true');
+    logger.info('cred-manager', `Wrote active credential for ${userName}: success=${ok}`);
+    return ok;
   } catch (err) {
-    console.error('[cred-manager] Error writing active credential:', err.message);
+    logger.error('cred-manager', 'Error writing active credential', err);
     return false;
   }
 }

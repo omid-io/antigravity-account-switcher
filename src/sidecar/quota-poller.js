@@ -58,8 +58,17 @@ export async function fetchActiveQuota(cdp) {
           headers,
           body: JSON.stringify({})
         });
+
+        if (statusRes.status === 401 || statusRes.status === 403) {
+          return { error: 'Unauthorized or session revoked', needsRelogin: true };
+        }
+
         const statusData = statusRes.ok ? await statusRes.json() : {};
         const u = statusData.userStatus || {};
+
+        if (!statusRes.ok || (!u.email && statusData.error)) {
+          return { error: 'Failed to retrieve active session', needsRelogin: true };
+        }
 
         // 2. Fetch Official Quota Summary (Gemini Weekly & 5-Hour rolling buckets)
         let fiveHourQuota = 1.0;
@@ -117,10 +126,20 @@ export async function fetchActiveQuota(cdp) {
           }
         }
 
+        // Extract exact plan from Google RPC (e.g. Pro, Free, Teams)
+        const tier = u.planStatus?.planInfo?.teamsTier || '';
+        let plan = u.planStatus?.planInfo?.planName || '';
+        if (!plan) {
+          if (tier.includes('PRO') || tier.includes('PLUS')) plan = 'Pro';
+          else if (tier.includes('TEAMS')) plan = 'Teams';
+          else if (tier.includes('ENTERPRISE')) plan = 'Enterprise';
+          else plan = 'Free';
+        }
+
         return {
           email: u.email || '',
           name: u.name || '',
-          plan: u.planStatus?.planInfo?.planName || 'Pro',
+          plan,
           profilePictureUrl: u.profilePictureUrl || '',
           fiveHourQuota,
           fiveHourResetTime,
@@ -137,6 +156,25 @@ export async function fetchActiveQuota(cdp) {
     const result = await cdp.evaluate(expr);
     if (!result || result.error) {
       console.warn('[quota-poller] Live quota check returned error:', result?.error);
+      if (result?.needsRelogin) {
+        const profiles = listProfiles();
+        const activeProfile = profiles.find(p => p.isActive);
+        if (activeProfile) {
+          updateProfileQuota(
+            activeProfile.email,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            true // needsRelogin
+          );
+        }
+      }
       return null;
     }
 
@@ -152,7 +190,8 @@ export async function fetchActiveQuota(cdp) {
         result.weeklyQuota,
         result.weeklyResetTime,
         result.fiveHourDesc,
-        result.weeklyDesc
+        result.weeklyDesc,
+        false // session is active & valid
       );
     }
 
@@ -168,9 +207,18 @@ export async function fetchActiveQuota(cdp) {
  * @param {import('./cdp-bridge.js').CdpBridge} [cdp] 
  */
 export async function getAllAccountsQuotaSummary(cdp) {
-  // If CDP is available, refresh the active account quota first
-  if (cdp && cdp.isConnected) {
-    await fetchActiveQuota(cdp);
+  // If CDP is available, ensure connection and refresh active account quota live
+  if (cdp) {
+    if (!cdp.isConnected && !cdp.isConnecting) {
+      try {
+        await cdp.connect();
+      } catch (e) {
+        console.warn('[quota-poller] Reconnect attempt failed:', e.message);
+      }
+    }
+    if (cdp.isConnected) {
+      await fetchActiveQuota(cdp);
+    }
   }
 
   const profiles = listProfiles();
@@ -193,9 +241,16 @@ export async function getAllAccountsQuotaSummary(cdp) {
     const weeklyPercent = Math.round(weeklyFraction * 100);
 
     let status = 'ready';
-    if (p.isActive) {
+    if (p.needsRelogin) {
+      status = 'needs_relogin';
+    } else if (p.isActive) {
       status = 'active';
-    } else if (fiveHourPercent === 0 || (!fiveHourCountdown.isExpired && fiveHourPercent < 10)) {
+    } else if (
+      fiveHourPercent === 0 || 
+      (!fiveHourCountdown.isExpired && fiveHourPercent < 10) ||
+      weeklyPercent === 0 || 
+      (!weeklyCountdown.isExpired && weeklyPercent < 10)
+    ) {
       status = 'cooldown';
     }
 
@@ -205,7 +260,7 @@ export async function getAllAccountsQuotaSummary(cdp) {
       email: p.email,
       name: p.name || '',
       profilePictureUrl: p.profilePictureUrl || '',
-      plan: p.plan || 'Pro',
+      plan: p.plan || 'Free',
       isActive: !!p.isActive,
       // 5-Hour Limit properties
       fiveHourFraction,
