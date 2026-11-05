@@ -25,7 +25,7 @@
 **Antigravity Account Switcher** is a Windows-focused account manager for Google Antigravity Desktop. It adds an in-app account panel, keeps local snapshots of the Google sessions you choose to save, and lets you switch the active account without juggling separate launcher windows.
 
 <div align="center">
-  <img src="assets/demo-modal.webp" alt="Antigravity Account Switcher - In-App Glassmorphic Modal & Quota Dashboard" width="85%" style="max-width: 720px;" />
+  <img src="assets/preview.webp" alt="Antigravity Account Switcher - In-App Glassmorphic Modal & Quota Dashboard" width="85%" style="max-width: 720px;" />
   <p><em>In-app glassmorphic modal with real-time quota telemetry, countdown timers, and 1-click account swap.</em></p>
 </div>
 
