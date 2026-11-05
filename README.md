@@ -4,6 +4,9 @@
   <h1>Antigravity Account Switcher</h1>
   <p><strong>Manage multiple Google accounts from inside Google Antigravity.</strong></p>
   <p>
+    <strong>English</strong> · <a href="README.fa.md">فارسی</a>
+  </p>
+  <p>
     <a href="https://github.com/omid-io/antigravity-account-switcher"><img src="https://img.shields.io/github/last-commit/omid-io/antigravity-account-switcher?style=flat-square&label=last%20commit" alt="Last commit" /></a>
     <a href="https://github.com/omid-io/antigravity-account-switcher/blob/master/LICENSE"><img src="https://img.shields.io/github/license/omid-io/antigravity-account-switcher?style=flat-square" alt="MIT License" /></a>
     <img src="https://img.shields.io/badge/Platform-Windows-0078D6?style=flat-square&logo=windows11&logoColor=white" alt="Windows" />
