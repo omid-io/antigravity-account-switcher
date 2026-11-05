@@ -111,7 +111,7 @@ npm run uninstall-plugin
 The switcher injects directly into Antigravity's activity bar right above the **Settings** gear icon. It gives you immediate 1-click access to all saved sessions without cluttering your code editor or switching away from your active workspace:
 
 <div align="center">
-  <img src="assets/demo-sidebar.webp" alt="Native Sidebar Placement opposite Settings" width="80%" />
+  <img src="assets/demo-sidebar.webp" alt="Native Sidebar Placement opposite Settings" width="100%" />
 </div>
 
 1. Open Antigravity and locate the account-switcher control in the sidebar area.
