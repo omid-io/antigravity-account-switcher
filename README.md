@@ -1,139 +1,197 @@
 <div align="center">
-
-<img src="assets/banner.webp" alt="Antigravity Account Switcher Banner" width="100%">
-
-# 🌌 Antigravity Account Switcher
-
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![Node.js](https://img.shields.io/badge/Node.js-%3E%3D18.0.0-green.svg)](https://nodejs.org/)
-[![Platform](https://img.shields.io/badge/Platform-Windows-0078D6.svg)](https://microsoft.com/windows)
-[![Antigravity](https://img.shields.io/badge/Antigravity-2.0%2B-blueviolet.svg)](https://github.com/google)
-
-**The first native in-app Multi-Account & Live Quota Switcher for Google Antigravity 2.0 Desktop.**  
-*Seamless sidebar integration · Zero external windows · Zero network proxies · 100% Ban-Safe.*
-
-[Key Features](#-key-features) • [Architecture](#-architecture) • [Installation](#-installation) • [CLI Usage](#-cli-usage) • [Security](#-security--human-safety)
-
+  <img src="assets/banner.webp" alt="Antigravity Account Switcher — Switch accounts. Stay in flow." width="100%" />
+  <br />
+  <h1>Antigravity Account Switcher</h1>
+  <p><strong>Manage multiple Google accounts from inside Google Antigravity.</strong></p>
+  <p>
+    <a href="https://github.com/omid-io/antigravity-account-switcher"><img src="https://img.shields.io/github/last-commit/omid-io/antigravity-account-switcher?style=flat-square&label=last%20commit" alt="Last commit" /></a>
+    <a href="https://github.com/omid-io/antigravity-account-switcher/blob/master/LICENSE"><img src="https://img.shields.io/github/license/omid-io/antigravity-account-switcher?style=flat-square" alt="MIT License" /></a>
+    <img src="https://img.shields.io/badge/Platform-Windows-0078D6?style=flat-square&logo=windows11&logoColor=white" alt="Windows" />
+    <img src="https://img.shields.io/badge/Node.js-22.4%2B-339933?style=flat-square&logo=nodedotjs&logoColor=white" alt="Node.js 22.4 or newer recommended" />
+  </p>
+  <p>
+    <a href="#features">Features</a> ·
+    <a href="#quick-start">Quick start</a> ·
+    <a href="#using-the-switcher">Usage</a> ·
+    <a href="#cli-reference">CLI</a> ·
+    <a href="#security-and-data">Security</a>
+  </p>
 </div>
 
 ---
 
-## ⚡ The Problem with Existing Solutions
+## What it does
 
-Developers using multiple Google accounts on Antigravity to manage quotas face critical obstacles:
-- **External Windows (Tauri/Electron/Web):** Forces you to `Alt+Tab` away from your active coding workspace.
-- **CLI-Only Switchers:** Blind terminal commands that lack real-time visibility into usage percentages and reset countdowns.
-- **Local Intercepting Proxies:** Rerouting OAuth requests through unofficial local proxies carries high risks of Google Sybil detection and account bans.
+**Antigravity Account Switcher** is a Windows-focused account manager for Google Antigravity Desktop. It adds an in-app account panel, keeps local snapshots of the Google sessions you choose to save, and lets you switch the active account without juggling separate launcher windows.
 
-**Antigravity Account Switcher** solves this natively. It runs 100% inside your existing Antigravity 2.0 desktop shell via a lightweight Sidecar and Chrome DevTools Protocol (CDP) bridge.
+A lightweight Node.js sidecar connects to the Antigravity renderer through the Chrome DevTools Protocol (CDP). It coordinates the local account vault, reads quota information exposed by Antigravity's local Language Server, and can optionally react to quota-exhaustion signals.
 
----
+> [!IMPORTANT]
+> The current implementation targets **Windows**. It reads and writes the Antigravity credential in **Windows Credential Manager** and uses Antigravity paths under `%APPDATA%`. macOS and Linux are not currently supported by this codebase.
 
-## ✨ Key Features
+## Features
 
-1. **Native Sidebar Button:** Injects cleanly right above the `Settings` gear icon with matching Antigravity dark/light design and an active quota percentage badge (`72%`).
-2. **Glassmorphic In-App Modal:** Click the sidebar button to open a sleek, frosted glass modal displaying all registered accounts, their tier (`Pro`), remaining quotas, and live countdown timers (`Resets in 2h 45m`).
-3. **1-Click Human-Safe Swap:** Swaps official Google OAuth sessions on disk atomically with a sub-2-second soft window reload (`location.reload()`). Zero proxies.
-4. **Shared Chats & Workspaces:** Unlike full profile isolation, your open projects, active conversations, and editor state remain 100% preserved when switching accounts.
-5. **Intelligent Auto-Switch:** Optional toggle that detects `429 Quota Exceeded` errors during chat/coding and automatically switches to the account with the highest available quota.
-6. **On-Demand Quota Refresh:** Dedicated "Refresh Quotas" button that queries Antigravity's official local Language Server RPC without aggressive background network polling.
+| Feature | What you get |
+| --- | --- |
+| **In-app account panel** | An account launcher and dashboard injected into the Antigravity desktop renderer. |
+| **Local account vault** | Save session snapshots, keep multiple account profiles, and rename or remove saved profiles. |
+| **Confirmed account switching** | Select a saved account, confirm the change, update the local credential, and request a Language Server restart and renderer reload when CDP is available. |
+| **Quota overview** | View the available 5-hour and weekly quota buckets, plan information, and reset countdowns. |
+| **Optional auto-switch** | When enabled, react to detected HTTP 429 / quota-exhaustion signals and select an eligible standby account. |
+| **CLI** | List accounts, switch by email or ID, snapshot the current session, inspect status, view logs, and check for updates. |
+| **No model-traffic proxy** | The project does not implement a third-party proxy for model requests; quota reads use Antigravity's local Language Server interface. |
 
----
+### A note about quota data
 
-## 🛠️ Architecture
+The active account is queried through Antigravity's local Language Server RPC when the panel refreshes. Saved inactive accounts are displayed from their **most recently stored quota snapshot**; their values are not independently refreshed while they are inactive. The panel refreshes on open, on demand, and periodically while it remains open.
 
-```mermaid
-flowchart TD
-    subgraph Antigravity 2.0 Desktop
-        DOM[Renderer Window / Sidebar]
-        Btn["Sidebar Button (Above Settings)"]
-        Modal["In-App Glassmorphic Modal"]
-        Btn --> Modal
-    end
+### How auto-switch works
 
-    subgraph Sidecar Service (Node.js)
-        CDP["CDP Bridge (127.0.0.1 DevTools)"]
-        Vault["Session Vault (Windows Credential Manager)"]
-        Poller["Official RPC Poller (GetUserStatus)"]
-        Auto["Auto-Switch Engine (429 Listener)"]
-    end
+Auto-switch is **off by default**. When enabled, the CDP bridge watches renderer console messages and network responses for quota-exhaustion signals such as `429`, `quota exceeded`, or `resource_exhausted`. It then considers inactive profiles marked `ready` with more than 10% remaining in **both** the 5-hour and weekly buckets, excluding accounts that need re-authentication. The account with the highest 5-hour remainder is preferred, with weekly remainder used as the tie-breaker.
 
-    CDP -->|Injects Button & Modal| DOM
-    Poller -->|Fetch Quota & Reset Timers| AntigravityLS[Official Local RPC Server]
-    Modal -->|Trigger Switch| Vault
-    Vault -->|Atomic Swap & Soft Reload| DOM
-    DOM -->|429 Rate Limit Detected| Auto
-    Auto -->|Auto-Swaps to Best Account| Vault
-```
+This is best-effort event detection, not a guarantee that every quota error will be detected or that a request will always continue uninterrupted. The toggle is runtime state and returns to off when the sidecar restarts.
 
----
+## Quick start
 
-## 🚀 Installation & Instant Updates
+### Requirements
 
-### Option 1: 1-Line npm / npx (Zero Clone Needed)
+- Windows 10 or Windows 11.
+- Google Antigravity Desktop installed and signed in at least once.
+- Node.js **22.4+ recommended** for stable built-in WebSocket support used by the CDP bridge. `package.json` currently declares `node >=18`, but older Node versions may require the experimental WebSocket flag or may not support the CDP connection as expected.
+- PowerShell and access to the current Windows user's Credential Manager.
+
+### Option 1: 1-Line npx (Recommended — Zero Clone Needed)
 
 Install directly into Antigravity with a single command:
-```bash
+```powershell
 npx antigravity-account-switcher install
 ```
 
 To update to the latest release with live hot-reload:
-```bash
+```powershell
 npx antigravity-account-switcher update
 ```
 
 Check system status and live account health:
-```bash
+```powershell
 npx antigravity-account-switcher status
 ```
 
-### Option 2: Clone from GitHub
+### Option 2: Install from source
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/omid-io/antigravity-account-switcher.git
-   cd antigravity-account-switcher
-   ```
-
-2. Run the automated installer:
-   ```bash
-   npm run install-plugin
-   ```
-   *This links and installs the switcher directly into `~/.gemini/config/plugins/antigravity-account-switcher`.*
-
----
-
-## 💻 CLI Usage
-
-The package also includes a standalone CLI for headless operations:
-
-```bash
-# Display all accounts, live quotas, and countdown timers
-npx antigravity-account-switcher list
-
-# Switch to an account by email or ID
-npx antigravity-account-switcher switch personal@gmail.com
-
-# Snapshot the currently active session with a custom label
-npx antigravity-account-switcher snapshot "Work Account"
-
-# Check if newer updates are available
-npx antigravity-account-switcher check-update
-
-# Start the sidecar daemon manually
-npx antigravity-account-switcher start
+```powershell
+git clone https://github.com/omid-io/antigravity-account-switcher.git
+cd antigravity-account-switcher
+npm run install-plugin
 ```
 
+The installer copies the project into:
+
+```text
+%USERPROFILE%\.gemini\config\plugins\antigravity-account-switcher
+```
+
+It also attempts to inject the updated UI into a running Antigravity window. On a first install, or when live reload is unavailable, restart Antigravity or reload its window.
+
+To remove the installed plugin later:
+
+```powershell
+npm run uninstall-plugin
+```
+
+## Using the switcher
+
+1. Open Antigravity and locate the account-switcher control in the sidebar area.
+2. Open the panel to review the active account and saved profiles. Use **Refresh** to request an updated quota snapshot.
+3. Choose **Add Account** to snapshot the current session and start the Google sign-in flow for another account. Complete sign-in inside Antigravity.
+4. To change accounts, select a saved profile and confirm the switch. When the CDP bridge is connected, the sidecar also requests a Language Server restart and reloads the Antigravity renderer.
+5. Turn on **Auto-Switch** only when you explicitly want the sidecar to react to detected quota-exhaustion events.
+
+> **One active account at a time:** this project switches the active session in one Antigravity installation. It does not run multiple isolated Antigravity sessions concurrently or combine account quotas.
+
+## CLI reference
+
+Run commands via `npx antigravity-account-switcher <command>` (or `node bin/cli.js <command>` when working in the cloned repo):
+
+| Command | Description |
+| --- | --- |
+| `npx antigravity-account-switcher list` | List saved profiles and their available quota snapshots. |
+| `npx antigravity-account-switcher switch <email-or-id>` | Switch to a saved profile. |
+| `npx antigravity-account-switcher snapshot "Work Account"` | Save or update a snapshot of the current session with a label. |
+| `npx antigravity-account-switcher status` | Show the sidecar connection, installed version, and vault account count. |
+| `npx antigravity-account-switcher logs 100` | Print the most recent 100 log lines. |
+| `npx antigravity-account-switcher check-update` | Check the configured update sources for a newer version. |
+| `npx antigravity-account-switcher start` | Start the sidecar manually. |
+| `npx antigravity-account-switcher uninstall` | Remove the installed plugin. |
+| `npx antigravity-account-switcher --help` | Show CLI help. |
+
+If the sidecar is offline when `switch` is run, the CLI can update the saved Windows credential, but Antigravity may need a manual restart or reload before the change is reflected in the UI.
+
+## How it is put together
+
+```mermaid
+flowchart TD
+    A[Antigravity Desktop Renderer] <-->|Chrome DevTools Protocol| B[Node.js Sidecar]
+    B <-->|Local HTTP API :51444| C[Injected Account Panel]
+    B --> D[Vault Manager]
+    D --> E[Windows Credential Manager]
+    D --> F[Local JSON Profile Vault]
+    B --> G[Quota Poller]
+    G <-->|Local Language Server RPC| A
+    B --> H[Auto-Switcher]
+    A -->|Console / Network quota signals| H
+```
+
+The sidecar exposes its local API on `127.0.0.1:51444`. The CDP bridge discovers Antigravity's `DevToolsActivePort` file under `%APPDATA%\Antigravity` and connects to the renderer's WebSocket debugger endpoint.
+
+## Security and data
+
+> [!WARNING]
+> **Saved session snapshots are stored as plain JSON files and are not encrypted by this application.** Treat the vault as highly sensitive credential material.
+
+| Data | Location |
+| --- | --- |
+| Profile index | `~/.gemini/antigravity-switcher/vault/profiles.json` |
+| Saved session snapshots | `~/.gemini/antigravity-switcher/vault/sessions/` |
+| Active Antigravity credential | Windows Credential Manager — `LegacyGeneric:target=gemini:antigravity` |
+| Active account email metadata | `%APPDATA%\Antigravity\app_storage.json` |
+
+Keep your Windows user account and device protected. Do not commit, upload, or share the vault, session JSON files, or diagnostic logs without reviewing them for sensitive account information. The project does not claim to make account switching policy-proof or risk-free; use accounts you own and follow the terms that apply to your Google and Antigravity accounts.
+
+The app's version checker may contact the npm registry and GitHub to check for updates. Quota retrieval itself is performed through the Antigravity local Language Server interface.
+
+## Troubleshooting
+
+**The account control does not appear**  
+Reload or restart Antigravity, then run `npx antigravity-account-switcher status` (or `node bin/cli.js status`). The CDP bridge looks for `%APPDATA%\Antigravity\DevToolsActivePort`; if Antigravity does not expose that file, live UI injection and reload features may be unavailable.
+
+**Quota values look stale or unavailable**  
+Open the panel and press **Refresh** while Antigravity is running. The active account is the one queried live; inactive accounts use their last saved snapshot. A failed local Language Server request can leave the latest active quota unavailable.
+
+**The CLI changed the credential but the UI still shows the old account**  
+Check that the sidecar is online with `npx antigravity-account-switcher status`. If the CDP connection is unavailable, restart or reload Antigravity manually after switching.
+
+**Auto-switch did not find a standby profile**  
+The candidate needs to be inactive, in `ready` status, not marked for re-login, and above 10% in both quota buckets. Auto-switch must also be enabled in the panel.
+
+## Development
+
+```powershell
+# Run the sidecar directly
+npm run start
+
+# Run the repository test suite
+npm test
+```
+
+The tests exercise the local profile vault and session integration. For development, use a dedicated Windows test account/profile rather than a production environment containing credentials you cannot afford to modify.
+
+## License
+
+Released under the [MIT License](LICENSE).
+
 ---
 
-## 🛡️ Security & Human-Safety
-
-- **100% Official Google Tokens:** The switcher works exclusively with official OAuth sessions generated by Antigravity's legitimate login flow.
-- **Zero Network Man-in-the-Middle:** No traffic is routed through local proxies or custom servers.
-- **Windows Credential Protection:** Sessions are stored using Windows `Advapi32.dll` Credential Manager standards.
-
----
-
-## 📄 License
-
-This project is licensed under the [MIT License](LICENSE).
+<div align="center">
+  <sub>Built for developers who switch accounts — not context.</sub>
+</div>
