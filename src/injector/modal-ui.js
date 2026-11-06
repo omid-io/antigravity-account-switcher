@@ -125,7 +125,7 @@
           <div class="agy-header-title-cluster">
             <div class="agy-header-title-row">
               <span class="agy-brand-title">Account Switcher</span>
-              <a id="agy-version-tag" class="agy-version-tag" href="https://github.com/omid-io/antigravity-account-switcher" target="_blank" rel="noopener noreferrer" title="View on GitHub">v1.2.2</a>
+              <a id="agy-version-tag" class="agy-version-tag" href="https://github.com/omid-io/antigravity-account-switcher" target="_blank" rel="noopener noreferrer" title="View on GitHub">v1.2.3</a>
               <div id="agy-update-pill" class="agy-update-pill" style="display:none;" title="Click to view update details">
                 <span class="agy-update-dot"></span>
                 <span id="agy-update-text">Update</span>

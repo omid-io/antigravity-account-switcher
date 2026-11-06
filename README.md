@@ -68,9 +68,17 @@ This is best-effort event detection, not a guarantee that every quota error will
 - Node.js **22.4+ recommended** for stable built-in WebSocket support used by the CDP bridge. `package.json` currently declares `node >=18`, but older Node versions may require the experimental WebSocket flag or may not support the CDP connection as expected.
 - PowerShell and access to the current Windows user's Credential Manager.
 
-### Option 1: 1-Line npx (Recommended — Zero Clone Needed)
+### Option 1: 1-Line Native Windows PowerShell (Recommended — Zero Dependency)
 
-Install directly into Antigravity with a single command:
+Install or update directly from PowerShell with zero prerequisites (no npm, git, or clone needed):
+
+```powershell
+irm https://raw.githubusercontent.com/omid-io/antigravity-account-switcher/master/install.ps1 | iex
+```
+
+### Option 2: 1-Line npm / npx (Zero Clone Needed)
+
+Install via npm registry with a single command:
 ```powershell
 npx antigravity-account-switcher install
 ```
@@ -85,7 +93,7 @@ Check system status and live account health:
 npx antigravity-account-switcher status
 ```
 
-### Option 2: Install from source
+### Option 3: Install from source
 
 ```powershell
 git clone https://github.com/omid-io/antigravity-account-switcher.git
@@ -93,10 +101,17 @@ cd antigravity-account-switcher
 npm run install-plugin
 ```
 
-The installer copies the project into:
+The installer installs the project into:
 
 ```text
 %USERPROFILE%\.gemini\config\plugins\antigravity-account-switcher
+```
+
+### Option 4: Antigravity Marketplace Card
+
+For users inside Antigravity with marketplace integration enabled, invoke via:
+```html
+<plugin-card catalog-id="antigravity-account-switcher"></plugin-card>
 ```
 
 It also attempts to inject the updated UI into a running Antigravity window. On a first install, or when live reload is unavailable, restart Antigravity or reload its window.
