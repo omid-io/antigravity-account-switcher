@@ -148,6 +148,24 @@ async function main() {
     }
 
     try {
+      if (pathname === '/logo.png' || pathname === '/assets/logo.png') {
+        const p = path.join(__dirname, '..', '..', 'assets', 'logo.png');
+        if (fs.existsSync(p)) {
+          res.writeHead(200, { 'Content-Type': 'image/png', 'Cache-Control': 'public, max-age=3600' });
+          fs.createReadStream(p).pipe(res);
+          return;
+        }
+      }
+
+      if (pathname === '/logo.svg' || pathname === '/assets/logo.svg') {
+        const p = path.join(__dirname, '..', '..', 'assets', 'logo.svg');
+        if (fs.existsSync(p)) {
+          res.writeHead(200, { 'Content-Type': 'image/svg+xml', 'Cache-Control': 'public, max-age=3600' });
+          fs.createReadStream(p).pipe(res);
+          return;
+        }
+      }
+
       if (pathname === '/api/accounts' && req.method === 'GET') {
         const summary = await getAllAccountsQuotaSummary(cdp);
         res.writeHead(200, { 'Content-Type': 'application/json' });

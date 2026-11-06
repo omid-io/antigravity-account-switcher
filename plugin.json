@@ -1,5 +1,6 @@
 {
   "name": "antigravity-account-switcher",
+  "displayName": "Antigravity Account Switcher",
   "description": "Multi-Account & Live Quota Switcher for Antigravity 2.0 with sidebar integration and 1-click swap.",
   "logo": "assets/logo.png"
 }
