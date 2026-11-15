@@ -6,6 +6,7 @@ import { listProfiles, switchProfile, snapshotCurrentSession } from '../src/side
 import { getAllAccountsQuotaSummary } from '../src/sidecar/quota-poller.js';
 import { checkForUpdates, compareSemver, getCurrentVersion } from '../src/sidecar/update-checker.js';
 import { install, triggerLiveReload, getInstalledVersion } from '../scripts/install-plugin.js';
+import { getSidecarPort } from '../src/sidecar/logger.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -86,13 +87,14 @@ async function run() {
       } catch {}
 
       // Test local sidecar connection
+      const sidecarPort = getSidecarPort();
       let sidecarOnline = false;
       try {
-        const res = await fetch('http://127.0.0.1:51444/api/accounts', { signal: AbortSignal.timeout(1500) });
+        const res = await fetch(`http://127.0.0.1:${sidecarPort}/api/accounts`, { signal: AbortSignal.timeout(1500) });
         if (res.ok) sidecarOnline = true;
       } catch {}
 
-      console.log(`Sidecar Server: ${sidecarOnline ? '🟢 ONLINE (Port 51444)' : '⚪ OFFLINE'}`);
+      console.log(`Sidecar Server: ${sidecarOnline ? `🟢 ONLINE (Port ${sidecarPort})` : '⚪ OFFLINE'}`);
 
       const profiles = listProfiles();
       console.log(`Vault Accounts: ${profiles.length} registered`);
@@ -169,7 +171,7 @@ async function run() {
       // If sidecar is online, dispatch POST /api/switch for live Language Server restart and window reload
       let sidecarHandled = false;
       try {
-        const sidecarRes = await fetch('http://127.0.0.1:51444/api/switch', {
+        const sidecarRes = await fetch(`http://127.0.0.1:${getSidecarPort()}/api/switch`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id: match.id }),

@@ -58,11 +58,17 @@ export function initVault() {
 /**
  * Reads user email from app_storage.json as fallback.
  */
-function getActiveEmailFromAppStorage() {
-  if (!fs.existsSync(APP_STORAGE_PATH)) return null;
+const USERNAME_KEYS = ['agy.onboarding.lastLoginUsername', 'jetski.onboarding.lastLoginUsername'];
+
+/**
+ * Reads active user email directly from Antigravity's app_storage.json.
+ */
+export function getActiveEmailFromAppStorage(storagePath = APP_STORAGE_PATH) {
+  if (!fs.existsSync(storagePath)) return null;
   try {
-    const data = JSON.parse(fs.readFileSync(APP_STORAGE_PATH, 'utf8'));
-    return data['jetski.onboarding.lastLoginUsername'] || null;
+    const data = JSON.parse(fs.readFileSync(storagePath, 'utf8'));
+    const key = USERNAME_KEYS.find(k => data[k]);
+    return key ? data[key] : null;
   } catch {
     return null;
   }
@@ -71,12 +77,21 @@ function getActiveEmailFromAppStorage() {
 /**
  * Updates user email in app_storage.json upon switch.
  */
-function updateAppStorageEmail(email) {
-  if (!fs.existsSync(APP_STORAGE_PATH) || !email) return false;
+export function updateAppStorageEmail(email, storagePath = APP_STORAGE_PATH) {
+  if (!fs.existsSync(storagePath) || !email) return false;
   try {
-    const data = JSON.parse(fs.readFileSync(APP_STORAGE_PATH, 'utf8'));
-    data['jetski.onboarding.lastLoginUsername'] = email;
-    fs.writeFileSync(APP_STORAGE_PATH, JSON.stringify(data, null, 2), 'utf8');
+    const data = JSON.parse(fs.readFileSync(storagePath, 'utf8'));
+    let updated = false;
+    for (const key of USERNAME_KEYS) {
+      if (key in data) {
+        data[key] = email;
+        updated = true;
+      }
+    }
+    if (!updated) {
+      data[USERNAME_KEYS[0]] = email;
+    }
+    fs.writeFileSync(storagePath, JSON.stringify(data, null, 2), 'utf8');
     return true;
   } catch (err) {
     console.error('[vault-manager] Error updating app_storage.json:', err.message);

@@ -3,6 +3,8 @@ import path from 'path';
 import os from 'os';
 import http from 'http';
 import { fileURLToPath } from 'url';
+import { selectMainTarget } from '../src/sidecar/cdp-bridge.js';
+import { getSidecarPort } from '../src/sidecar/logger.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -75,7 +77,7 @@ export async function triggerLiveReload() {
       }).on('error', () => resolve([]));
     });
 
-    const page = targets.find(t => t.type === 'page' || (t.url && t.url.includes('workbench.html')));
+    const page = selectMainTarget(targets);
     if (!page || !page.webSocketDebuggerUrl) return false;
 
     const cssPath = path.join(TARGET_DIR, 'src', 'injector', 'modal.css');
@@ -116,9 +118,11 @@ export async function triggerLiveReload() {
       })()`
     });
 
-    // Re-inject and initialize
+    // Re-inject and initialize with active sidecar port
+    const apiBase = `http://127.0.0.1:${getSidecarPort()}`;
+    await send('Runtime.evaluate', { expression: `window.__AGY_SWITCHER_API_BASE__ = ${JSON.stringify(apiBase)};` });
     await send('Runtime.evaluate', { expression: js });
-    await send('Runtime.evaluate', { expression: `window.__AGY_SWITCHER__.init(${JSON.stringify(css)});` });
+    await send('Runtime.evaluate', { expression: `window.__AGY_SWITCHER__.init(${JSON.stringify(css)}, ${JSON.stringify(apiBase)});` });
 
     ws.close();
     return true;
@@ -136,6 +140,12 @@ export async function install({ silent = false } = {}) {
   }
 
   copyDirRecursive(ROOT_DIR, TARGET_DIR);
+
+  // Clean up legacy 1.x daemon sidecar so Antigravity does not launch two colliding sidecars
+  const legacyDaemonDir = path.join(TARGET_DIR, 'sidecars', 'daemon');
+  if (fs.existsSync(legacyDaemonDir)) {
+    fs.rmSync(legacyDaemonDir, { recursive: true, force: true });
+  }
 
   const reloaded = await triggerLiveReload();
   if (!silent) {

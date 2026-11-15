@@ -8,7 +8,7 @@ import { initVault, listProfiles, switchProfile, snapshotCurrentSession, removeP
 import { getAllAccountsQuotaSummary, fetchActiveQuota } from './quota-poller.js';
 import { AutoSwitcher } from './auto-switcher.js';
 import { checkForUpdates } from './update-checker.js';
-import { logger } from './logger.js';
+import { logger, writeSidecarPort } from './logger.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -16,8 +16,32 @@ const __dirname = path.dirname(__filename);
 const CSS_PATH = path.join(__dirname, '..', 'injector', 'modal.css');
 const UI_JS_PATH = path.join(__dirname, '..', 'injector', 'modal-ui.js');
 
-const PORT = 51444;
+const DEFAULT_PORT = 51444;
 const HOST = '127.0.0.1';
+
+function tryListen(server, host, port) {
+  return new Promise((resolve, reject) => {
+    const onError = (err) => { server.off('listening', onListening); reject(err); };
+    const onListening = () => { server.off('error', onError); resolve(server.address().port); };
+    server.once('error', onError);
+    server.once('listening', onListening);
+    server.listen(port, host);
+  });
+}
+
+/**
+ * Binds local HTTP server, falling back to ephemeral port if preferred port hits EACCES/EADDRINUSE.
+ */
+export async function listenWithFallback(server, host = HOST, preferredPort = DEFAULT_PORT) {
+  for (const port of [preferredPort, preferredPort + 1, 0]) {
+    try {
+      return await tryListen(server, host, port);
+    } catch (err) {
+      if (err.code !== 'EACCES' && err.code !== 'EADDRINUSE') throw err;
+    }
+  }
+  throw new Error('Failed to bind local API server port');
+}
 
 let isSwitchingInProgress = false;
 
@@ -122,6 +146,7 @@ async function main() {
   const autoSwitcher = new AutoSwitcher(cdp);
 
   // 3. Start local HTTP API for in-DOM UI communication
+  let activePort = DEFAULT_PORT;
   const server = http.createServer(async (req, res) => {
     // Enable CORS for localhost renderer
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -134,7 +159,7 @@ async function main() {
       return;
     }
 
-    const url = new URL(req.url, `http://${HOST}:${PORT}`);
+    const url = new URL(req.url, `http://${HOST}:${activePort}`);
     const pathname = url.pathname;
 
     let body = {};
@@ -303,21 +328,26 @@ async function main() {
     }
   });
 
-  server.listen(PORT, HOST, () => {
-    logger.info('sidecar', `Local API Server listening on http://${HOST}:${PORT}`);
+  activePort = await listenWithFallback(server, HOST, DEFAULT_PORT);
+  writeSidecarPort(activePort);
+  server.on('error', (err) => {
+    logger.error('sidecar', 'HTTP server error', err);
   });
+  logger.info('sidecar', `Local API Server listening on http://${HOST}:${activePort}`);
 
   // 4. Inject UI into renderer window
   async function injectUI() {
     try {
       const cssContent = fs.readFileSync(CSS_PATH, 'utf8');
       const uiJsContent = fs.readFileSync(UI_JS_PATH, 'utf8');
+      const apiBase = `http://${HOST}:${activePort}`;
 
-      // Inject UI Engine script
+      // Expose bound API base before evaluating UI Engine script
+      await cdp.evaluate(`window.__AGY_SWITCHER_API_BASE__ = ${JSON.stringify(apiBase)};`, false, 3000);
       await cdp.evaluate(uiJsContent, false, 5000);
 
-      // Initialize UI Engine with styles
-      const initExpr = `if (window.__AGY_SWITCHER__) { window.__AGY_SWITCHER__.init(${JSON.stringify(cssContent)}); }`;
+      // Initialize UI Engine with styles and bound API base
+      const initExpr = `if (window.__AGY_SWITCHER__) { window.__AGY_SWITCHER__.init(${JSON.stringify(cssContent)}, ${JSON.stringify(apiBase)}); }`;
       await cdp.evaluate(initExpr, false, 5000);
 
       logger.info('sidecar', 'Successfully injected Account Switcher UI into Antigravity sidebar.');
@@ -363,7 +393,9 @@ async function main() {
   await cdp.connect();
 }
 
-main().catch(err => {
-  logger.error('sidecar', 'Fatal error', err);
-  process.exit(1);
-});
+if (process.env.AGY_SIDECAR_NO_START !== '1') {
+  main().catch(err => {
+    logger.error('sidecar', 'Fatal error', err);
+    process.exit(1);
+  });
+}

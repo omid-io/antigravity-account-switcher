@@ -4,7 +4,31 @@ import os from 'os';
 
 const LOG_DIR = path.join(os.homedir(), '.gemini', 'antigravity-switcher');
 const LOG_FILE = path.join(LOG_DIR, 'switcher.log');
+const PORT_FILE = path.join(LOG_DIR, 'sidecar.port');
 const MAX_LOG_SIZE = 5 * 1024 * 1024; // 5 MB
+
+/**
+ * Persists active sidecar HTTP port for CLI and live-reload scripts.
+ */
+export function writeSidecarPort(port) {
+  try {
+    ensureLogDir();
+    fs.writeFileSync(PORT_FILE, String(port), 'utf8');
+  } catch {}
+}
+
+/**
+ * Reads active sidecar HTTP port or returns the default port.
+ */
+export function getSidecarPort(defaultPort = 51444) {
+  try {
+    if (!fs.existsSync(PORT_FILE)) return defaultPort;
+    const port = parseInt(fs.readFileSync(PORT_FILE, 'utf8').trim(), 10);
+    return Number.isInteger(port) && port > 0 ? port : defaultPort;
+  } catch {
+    return defaultPort;
+  }
+}
 
 function ensureLogDir() {
   if (!fs.existsSync(LOG_DIR)) {

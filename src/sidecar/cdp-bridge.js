@@ -10,6 +10,22 @@ const DEVTOOLS_PORT_PATH = path.join(
   'DevToolsActivePort'
 );
 
+const IGNORED_TARGET_URL_RE = /^(about:|data:|devtools:|chrome-extension:)/i;
+
+/**
+ * Selects the main Antigravity renderer page across 1.x (workbench.html) and 2.x+ (https://127.0.0.1).
+ */
+export function selectMainTarget(targets = []) {
+  const pages = targets.filter(t => t.type === 'page' && t.url && !IGNORED_TARGET_URL_RE.test(t.url));
+  return (
+    pages.find(t => t.url.includes('workbench.html')) ||
+    pages.find(t => /^https:\/\/127\.0\.0\.1:\d+\//.test(t.url) && t.title?.includes('Antigravity')) ||
+    pages.find(t => /^https:\/\/127\.0\.0\.1:\d+\//.test(t.url)) ||
+    pages.find(t => t.title?.includes('Antigravity')) ||
+    null
+  );
+}
+
 export class CdpBridge extends EventEmitter {
   constructor() {
     super();
@@ -51,8 +67,7 @@ export class CdpBridge extends EventEmitter {
       });
       if (!res.ok) return null;
       const targets = await res.json();
-      // Target must be a page running on local host server or Antigravity shell
-      return targets.find(t => t.type === 'page' && (t.url?.includes('127.0.0.1') || t.title?.includes('Antigravity')));
+      return selectMainTarget(targets);
     } catch {
       return null;
     }

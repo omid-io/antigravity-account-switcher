@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Official 1-Line Native Windows Installer for Antigravity Account Switcher.
 .DESCRIPTION
@@ -62,6 +62,12 @@ Get-ChildItem -Path $extractedFolder | ForEach-Object {
         return
     }
     Copy-Item -Path $_.FullName -Destination $dest -Recurse -Force
+}
+
+# Remove legacy 1.x daemon sidecar if left over from an earlier installation
+$legacyDaemonDir = Join-Path $targetDir "sidecars\daemon"
+if (Test-Path $legacyDaemonDir) {
+    Remove-Item $legacyDaemonDir -Recurse -Force -ErrorAction SilentlyContinue
 }
 
 # Cleanup Temporary Files
